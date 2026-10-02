@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Admin Command Center - AgriSmart Connect</title>
+    <meta name="description" content="Platform administration: market liquidity, user controls, farmer payouts settlement, and surplus analytics.">
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .admin-header {
+            background: var(--white);
+            border-bottom: 1px solid var(--slate-200);
+            padding: 2.25rem 0;
+            margin-bottom: 2rem;
+        }
+        .admin-tabs {
+            display: flex;
+            gap: 1rem;
+            border-bottom: 1px solid var(--slate-200);
+            margin-bottom: 2rem;
+            overflow-x: auto;
+        }
+        .admin-tab {
+            padding: 0.75rem 1.25rem;
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--slate-500);
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            transition: var(--transition-fast);
+            white-space: nowrap;
+        }
+        .admin-tab:hover, .admin-tab.active {
+            color: var(--primary);
+            border-color: var(--primary);
+        }
+        .tab-panel {
+            display: none;
+        }
+        .tab-panel.active {
+            display: block;
+        }
+        .kpi-grid-admin {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 2.5rem;
+        }
+        .kpi-card-admin {
+            background: var(--white);
+            border: 1px solid var(--slate-200);
+            border-radius: var(--radius-md);
+            padding: 1.25rem 1.5rem;
+            box-shadow: var(--shadow-sm);
+        }
+        .status-badge {
+            display: inline-block;
+            font-size: 0.72rem;
+            font-weight: 800;
+            padding: 0.25rem 0.65rem;
+            border-radius: var(--radius-full);
+            letter-spacing: 0.5px;
+        }
+        .badge-available { background: #dcfce7; color: #166534; }
+        .badge-open { background: #e0f2fe; color: #0369a1; }
+        .badge-matched { background: #fef3c7; color: #92400e; }
+        .badge-paid { background: #ede9fe; color: #5b21b6; }
+        .badge-danger { background: #fee2e2; color: #991b1b; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+        th {
+            background: var(--slate-50);
+            padding: 0.8rem 1rem;
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            color: var(--slate-600);
+            border-bottom: 1px solid var(--slate-200);
+        }
+        td {
+            padding: 0.9rem 1rem;
+            border-bottom: 1px solid var(--slate-100);
+            font-size: 0.88rem;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <header class="navbar">
+        <div class="container nav-container">
+            <a href="/index.html" class="brand-logo">
+                <div class="logo-icon">🌱</div>
+                <span>AgriSmart<span style="color:var(--primary-light);">Connect</span></span>
+                <span class="brand-badge" style="background:#fee2e2;color:#991b1b;">Super Admin</span>
+            </a>
+
+            <ul class="nav-links">
+                <li><a href="/index.html" class="nav-link">Home</a></li>
+                <li><a href="/marketplace.html" class="nav-link">Marketplace</a></li>
+                <li><a href="/admin.html" class="nav-link active">Admin Console</a></li>
+            </ul>
+
+            <div class="nav-actions" id="nav-auth-actions">
+                <!-- Populated by api.js -->
+            </div>
+        </div>
+    </header>
+
+    <!-- HEADER -->
+    <section class="admin-header">
+        <div class="container" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1.5rem;">
+            <div>
+                <span class="section-badge" style="color:var(--status-danger);">Platform Oversight</span>
+                <h1 style="font-size:2.2rem;margin-bottom:0.25rem;">Command Center & Analytics</h1>
+                <p style="color:var(--slate-500);font-size:1rem;">Supervise supply-demand matching, settle farmer payouts, and mitigate crop surplus.</p>
+            </div>
+            <div>
+                <button class="btn btn-outline btn-sm" onclick="loadAdminOverview()">Refresh Analytics</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- MAIN ADMIN INTERFACE -->
+    <main class="container" style="padding-bottom: 4rem;">
+        <!-- KPI METRICS -->
+        <div class="kpi-grid-admin">
+            <div class="kpi-card-admin">
+                <div class="form-label" style="font-size:0.75rem;color:var(--slate-500);text-transform:uppercase;">Farmers</div>
+                <div style="font-family:'Outfit',sans-serif;font-size:1.75rem;font-weight:800;" id="kpi-total-farmers">0</div>
+            </div>
+            <div class="kpi-card-admin">
+                <div class="form-label" style="font-size:0.75rem;color:var(--slate-500);text-transform:uppercase;">Buyers (B2C & B2B)</div>
+                <div style="font-family:'Outfit',sans-serif;font-size:1.75rem;font-weight:800;" id="kpi-total-buyers">0</div>
+            </div>
+            <div class="kpi-card-admin">
+                <div class="form-label" style="font-size:0.75rem;color:var(--slate-500);text-transform:uppercase;">Total Orders</div>
+                <div style="font-family:'Outfit',sans-serif;font-size:1.75rem;font-weight:800;" id="kpi-total-orders">0</div>
+            </div>
+            <div class="kpi-card-admin">
+                <div class="form-label" style="font-size:0.75rem;color:var(--slate-500);text-transform:uppercase;">Today's Orders</div>
+                <div style="font-family:'Outfit',sans-serif;font-size:1.75rem;font-weight:800;color:var(--primary);" id="kpi-today-orders">0</div>
+            </div>
+            <div class="kpi-card-admin">
+                <div class="form-label" style="font-size:0.75rem;color:var(--slate-500);text-transform:uppercase;">Total GMV Sales</div>
+                <div style="font-family:'Outfit',sans-serif;font-size:1.75rem;font-weight:800;color:var(--primary-dark);" id="kpi-total-sales">₹0</div>
+            </div>
+            <div class="kpi-card-admin">
+                <div class="form-label" style="font-size:0.75rem;color:var(--slate-500);text-transform:uppercase;">Platform Revenue (5%)</div>
+                <div style="font-family:'Outfit',sans-serif;font-size:1.75rem;font-weight:800;color:#0284c7;" id="kpi-platform-rev">₹0</div>
+            </div>
+            <div class="kpi-card-admin">
+                <div class="form-label" style="font-size:0.75rem;color:var(--slate-500);text-transform:uppercase;">Pending Payouts</div>
+                <div style="font-family:'Outfit',sans-serif;font-size:1.75rem;font-weight:800;color:var(--accent-amber);" id="kpi-pending-payouts">₹0</div>
+            </div>
+            <div class="kpi-card-admin">
+                <div class="form-label" style="font-size:0.75rem;color:var(--slate-500);text-transform:uppercase;">Active Hubs</div>
+                <div style="font-family:'Outfit',sans-serif;font-size:1.75rem;font-weight:800;" id="kpi-active-hubs">0</div>
+            </div>
+        </div>
+
+        <!-- NAVIGATION TABS -->
+        <div class="admin-tabs">
+            <div class="admin-tab active" onclick="switchAdminTab('overview')">Overview &amp; Surplus Alerts</div>
+            <div class="admin-tab" onclick="switchAdminTab('users')">User Management</div>
+            <div class="admin-tab" onclick="switchAdminTab('payouts')">Payouts & Settlements</div>
+            <div class="admin-tab" onclick="switchAdminTab('reports')">Sales &amp; Hub Reports</div>
+            <div class="admin-tab" onclick="switchAdminTab('moderation')">🛡️ Product Moderation</div>
+            <div class="admin-tab" onclick="switchAdminTab('logistics')">&#128506;&#65039; AI Logistics</div>
+            <div class="admin-tab" onclick="switchAdminTab('demo-images')">🖼️ Demo Images</div>
+        </div>
+
+        <!-- TAB 1: OVERVIEW & SURPLUS -->
+        <div id="tab-overview" class="tab-panel active">
+            <div class="auth-card" style="width:100%;max-width:none;padding:1.5rem;box-shadow:var(--shadow-sm);border:1px solid var(--slate-200);">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+                    <div>
+                        <h3 style="font-size:1.25rem;">🌾 Surplus Produce Detection (Spoilage Prevention)</h3>
+                        <p style="font-size:0.85rem;color:var(--slate-500);">Unreserved batches approaching harvest date ready for wholesale or discount offers</p>
+                    </div>
+                </div>
+
+                <div style="overflow-x:auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Produce Batch</th>
+                                <th>Farm / Origin</th>
+                                <th>Unmatched Volume</th>
+                                <th>Floor Price</th>
+                                <th>Action Recommendation</th>
+                            </tr>
+                        </thead>
+                        <tbody id="surplus-alerts-tbody">
+                            <tr><td colspan="5" style="text-align:center;padding:1.5rem;color:var(--slate-400);">Loading surplus alerts...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: USERS -->
+        <div id="tab-users" class="tab-panel">
+            <div class="auth-card" style="width:100%;max-width:none;padding:1.5rem;box-shadow:var(--shadow-sm);border:1px solid var(--slate-200);">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+                    <div>
+                        <h3 style="font-size:1.25rem;">Platform Users Management</h3>
+                        <p style="font-size:0.85rem;color:var(--slate-500);">All registered farmers, consumers, restaurants, retailers, hub operators, and drivers</p>
+                    </div>
+                </div>
+
+                <div style="overflow-x:auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email / Phone</th>
+                                <th>Role</th>
+                                <th>Linked Entity</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-users-tbody">
+                            <tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--slate-400);">Loading users...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: PAYOUTS -->
+        <div id="tab-payouts" class="tab-panel">
+            <div class="auth-card" style="width:100%;max-width:none;padding:1.5rem;box-shadow:var(--shadow-sm);border:1px solid var(--slate-200);">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+                    <div>
+                        <h3 style="font-size:1.25rem;">Farmer Payouts Ledger & Disbursement</h3>
+                        <p style="font-size:0.85rem;color:var(--slate-500);">Disburse earnings to farmers for verified and delivered produce orders</p>
+                    </div>
+                </div>
+
+                <div style="overflow-x:auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Payout ID</th>
+                                <th>Order Ref</th>
+                                <th>Farmer / Farm</th>
+                                <th>Gross Produce</th>
+                                <th>Platform Fee</th>
+                                <th>Net Payable</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-payouts-tbody">
+                            <tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--slate-400);">Loading payout ledger...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Delivery Partner Payouts Table -->
+            <div class="auth-card" style="width:100%;max-width:none;padding:1.5rem;box-shadow:var(--shadow-sm);border:1px solid var(--slate-200);margin-top:1.5rem;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+                    <div>
+                        <h3 style="font-size:1.25rem;">Delivery Partner Payouts Ledger</h3>
+                        <p style="font-size:0.85rem;color:var(--slate-500);">Disburse trip allowances, distance fares, and cargo hauling earnings to drivers</p>
+                    </div>
+                </div>
+
+                <div style="overflow-x:auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Payout ID</th>
+                                <th>Order Ref</th>
+                                <th>Delivery Driver</th>
+                                <th>Destination</th>
+                                <th>Cargo</th>
+                                <th>Driver Payout</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-driver-payouts-tbody">
+                            <tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--slate-400);">Loading driver payouts...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 4: REPORTS -->
+        <div id="tab-reports" class="tab-panel">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
+                <div class="auth-card" style="width:100%;max-width:none;padding:1.5rem;box-shadow:var(--shadow-sm);border:1px solid var(--slate-200);">
+                    <h3 style="font-size:1.2rem;margin-bottom:1rem;">Top Sold Crops</h3>
+                    <div style="overflow-x:auto;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Crop</th>
+                                    <th>Category</th>
+                                    <th>Orders</th>
+                                    <th>Total Sold</th>
+                                    <th>Revenue</th>
+                                </tr>
+                            </thead>
+                            <tbody id="report-crops-tbody">
+                                <tr><td colspan="5" style="text-align:center;padding:1.5rem;color:var(--slate-400);">Loading crop analytics...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="auth-card" style="width:100%;max-width:none;padding:1.5rem;box-shadow:var(--shadow-sm);border:1px solid var(--slate-200);">
+                    <h3 style="font-size:1.2rem;margin-bottom:1rem;">Hub Routing Throughput</h3>
+                    <div style="overflow-x:auto;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Hub</th>
+                                    <th>District</th>
+                                    <th>Capacity</th>
+                                    <th>Orders Routed</th>
+                                    <th>Volume Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody id="report-hubs-tbody">
+                                <tr><td colspan="5" style="text-align:center;padding:1.5rem;color:var(--slate-400);">Loading hub statistics...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 5: PRODUCT MODERATION -->
+        <div id="tab-moderation" class="tab-panel">
+            <div class="auth-card" style="width:100%;max-width:none;padding:1.5rem;box-shadow:var(--shadow-sm);border:1px solid var(--slate-200);">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+                    <div>
+                        <h3 style="font-size:1.25rem;">🛡️ Product Moderation Queue</h3>
+                        <p style="font-size:0.85rem;color:var(--slate-500);">Review, approve, pause, or reject farmer product listings before they appear on the marketplace</p>
+                    </div>
+                    <button class="btn btn-outline btn-sm" onclick="loadModerationQueue()">🔄 Refresh</button>
+                </div>
+                <div style="overflow-x:auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Farmer / District</th>
+                                <th>Qty / Price</th>
+                                <th>Harvest</th>
+                                <th>Current Status</th>
+                                <th>Moderation</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="moderation-tbody">
+                            <tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--slate-400);">Select this tab to load moderation queue...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 6: AI LOGISTICS -->
+        <div id="tab-logistics" class="tab-panel">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
+                <!-- XGBoost Demand Predictions -->
+                <div class="auth-card" style="width:100%;max-width:none;padding:1.5rem;box-shadow:var(--shadow-sm);border:1px solid var(--slate-200);">
+                    <h3 style="font-size:1.2rem;margin-bottom:0.25rem;">🧠 AI Demand Predictions (XGBoost)</h3>
+                    <p style="font-size:0.8rem;color:var(--slate-500);margin-bottom:1rem;">Machine learning demand forecasts per crop. <span style="background:#fef9c3;color:#92400e;padding:0.1rem 0.4rem;border-radius:4px;font-size:0.72rem;font-weight:700;">SIMULATED</span></p>
+                    <div id="admin-demand-list" style="display:flex;flex-direction:column;gap:0.5rem;max-height:320px;overflow-y:auto;">
+                        <div style="color:var(--slate-400);font-size:0.85rem;">Loading demand forecasts...</div>
+                    </div>
+                </div>
+
+                <!-- Inventory Alerts -->
+                <div class="auth-card" style="width:100%;max-width:none;padding:1.5rem;box-shadow:var(--shadow-sm);border:1px solid var(--slate-200);">
+                    <h3 style="font-size:1.2rem;margin-bottom:0.25rem;">🚨 Inventory Alerts (FEFO Priority)</h3>
+                    <p style="font-size:0.8rem;color:var(--slate-500);margin-bottom:1rem;">First-Expired-First-Out perishable priority alerts across all hubs</p>
+                    <div id="admin-inventory-alerts" style="display:flex;flex-direction:column;gap:0.5rem;max-height:320px;overflow-y:auto;">
+                        <div style="color:var(--slate-400);font-size:0.85rem;">Loading inventory alerts...</div>
+                    </div>
+                </div>
+
+                <!-- Farmer Recommendations -->
+                <div class="auth-card" style="width:100%;max-width:none;padding:1.5rem;box-shadow:var(--shadow-sm);border:1px solid var(--slate-200);">
+                    <h3 style="font-size:1.2rem;margin-bottom:0.25rem;">🌾 Farmer-Hub AI Matches</h3>
+                    <p style="font-size:0.8rem;color:var(--slate-500);margin-bottom:1rem;">AI-matched farmers to optimal collection hubs based on proximity, capacity &amp; crop type</p>
+                    <div id="admin-farmer-recs" style="display:flex;flex-direction:column;gap:0.5rem;max-height:320px;overflow-y:auto;">
+                        <div style="color:var(--slate-400);font-size:0.85rem;">Loading recommendations...</div>
+                    </div>
+                </div>
+
+                <!-- Route Optimizer -->
+                <div class="auth-card" style="width:100%;max-width:none;padding:1.5rem;box-shadow:var(--shadow-sm);border:1px solid var(--slate-200);">
+                    <h3 style="font-size:1.2rem;margin-bottom:0.25rem;">🚚 OR-Tools Route Optimizer (CVRP)</h3>
+                    <p style="font-size:0.8rem;color:var(--slate-500);margin-bottom:1rem;">Google OR-Tools Capacitated Vehicle Routing for logistics optimization</p>
+                    <button class="btn btn-primary btn-sm" onclick="adminRunRouteOptimizer()" style="margin-bottom:1rem;">⚡ Optimize Delivery Routes</button>
+                    <div id="admin-route-result" style="font-size:0.85rem;color:var(--slate-700);background:var(--slate-50);padding:1rem;border-radius:var(--radius-md);border:1px solid var(--slate-200);">
+                        Click the button to run the route optimizer.
+                    </div>
+                    <div style="margin-top:0.75rem;">
+                        <a href="/logistics.html" class="btn btn-outline btn-sm" style="width:100%;display:block;text-align:center;">🗺️ Open Full Logistics Map</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>
+
+        <!-- TAB 7: DEMO IMAGES -->
+        <div id="tab-demo-images" class="tab-panel">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem;">
+                <div>
+                    <h2 style="font-size:1.4rem;margin-bottom:0.25rem;">🖼️ Demo Product Image Management</h2>
+                    <p style="font-size:0.85rem;color:var(--slate-500);">View and manage images for <strong>demo/test products only</strong>. Real farmer data is never modified here.</p>
+                </div>
+                <div style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap;">
+                    <input type="text" id="demo-img-search" class="form-control" style="width:200px;font-size:0.85rem;"
+                           placeholder="Filter by crop name..." oninput="filterDemoImages()">
+                    <select id="demo-img-filter-crop" class="form-control" style="width:160px;font-size:0.85rem;" onchange="filterDemoImages()">
+                        <option value="">All Crops</option>
+                    </select>
+                    <button class="btn btn-outline btn-sm" onclick="loadAdminDemoImages()">↻ Refresh</button>
+                </div>
+            </div>
+
+            <!-- Stats bar -->
+            <div id="demo-img-stats" style="display:flex;gap:1.5rem;background:var(--slate-50);border:1px solid var(--slate-200);border-radius:var(--radius-md);padding:1rem 1.5rem;margin-bottom:1.5rem;flex-wrap:wrap;">
+                <div style="text-align:center;">
+                    <div id="dimg-stat-products" style="font-size:1.5rem;font-weight:800;color:var(--primary-dark);">--</div>
+                    <div style="font-size:0.72rem;color:var(--slate-500);text-transform:uppercase;font-weight:700;">Demo Products</div>
+                </div>
+                <div style="text-align:center;">
+                    <div id="dimg-stat-images" style="font-size:1.5rem;font-weight:800;color:var(--primary-dark);">--</div>
+                    <div style="font-size:0.72rem;color:var(--slate-500);text-transform:uppercase;font-weight:700;">Total Images</div>
+                </div>
+                <div style="text-align:center;">
+                    <div id="dimg-stat-wikimedia" style="font-size:1.5rem;font-weight:800;color:#0369a1;">--</div>
+                    <div style="font-size:0.72rem;color:var(--slate-500);text-transform:uppercase;font-weight:700;">Wikimedia CC</div>
+                </div>
+                <div style="text-align:center;margin-left:auto;">
+                    <span style="background:#dcfce7;color:#15803d;font-size:0.75rem;font-weight:800;padding:0.4rem 0.8rem;border-radius:var(--radius-full);">✓ 0 Real Farmer Records Modified</span>
+                </div>
+            </div>
+
+            <!-- Image grid -->
+            <div id="demo-images-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem;">
+                <div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--slate-400);">Loading demo images...</div>
+            </div>
+        </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="container footer-content">
+            <div style="display:flex;align-items:center;gap:0.75rem;">
+                <div class="logo-icon" style="width:28px;height:28px;font-size:0.9rem;">🌱</div>
+                <span style="font-weight:700;color:var(--slate-800);">AgriSmart Connect</span>
+                <span>© 2026</span>
+            </div>
+            <ul class="footer-links">
+                <li><a href="/index.html">Home</a></li>
+                <li><a href="/admin.html">Admin</a></li>
+            </ul>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="/js/i18n.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/voice-guidance.js"></script>
+    <script src="/js/admin.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.AgriVoice) window.AgriVoice.attachPageHeaderVoice('admin');
+        });
+    </script>
+</body>
+</html>

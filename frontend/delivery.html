@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delivery Partner Logistics - AgriSmart Connect</title>
+    <meta name="description" content="Delivery partner dispatch station: claim collection runs, track hub pickups, and confirm delivery handoffs.">
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .delivery-header {
+            background: linear-gradient(135deg, rgba(255, 237, 213, 0.7), rgba(248, 250, 252, 1));
+            border-bottom: 1px solid var(--slate-200);
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+        }
+        .status-badge {
+            display: inline-block;
+            font-size: 0.72rem;
+            font-weight: 800;
+            padding: 0.25rem 0.65rem;
+            border-radius: var(--radius-full);
+            letter-spacing: 0.5px;
+        }
+        .badge-available { background: #dcfce7; color: #166534; }
+        .badge-open { background: #e0f2fe; color: #0369a1; }
+        .badge-matched { background: #fef3c7; color: #92400e; }
+        .badge-paid { background: #ede9fe; color: #5b21b6; }
+        .badge-danger { background: #fee2e2; color: #991b1b; }
+
+        /* KPI Cards */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 2rem;
+        }
+        .kpi-card {
+            background: var(--white);
+            border: 1px solid var(--slate-200);
+            border-radius: var(--radius-md);
+            padding: 1.25rem 1.5rem;
+            box-shadow: var(--shadow-sm);
+        }
+        .kpi-label {
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--slate-500);
+            margin-bottom: 0.4rem;
+        }
+        .kpi-value {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--slate-900);
+        }
+
+        /* Filter Tabs */
+        .filter-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.75rem;
+            border-bottom: 2px solid var(--slate-200);
+            padding-bottom: 0.5rem;
+            overflow-x: auto;
+        }
+        .filter-tab-btn {
+            background: transparent;
+            border: none;
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--slate-600);
+            cursor: pointer;
+            border-radius: var(--radius-md);
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            white-space: nowrap;
+        }
+        .filter-tab-btn:hover {
+            background: var(--slate-100);
+            color: var(--slate-900);
+        }
+        .filter-tab-btn.active {
+            background: #ffedd5;
+            color: #9a3412;
+            font-weight: 700;
+        }
+        .tab-counter {
+            background: rgba(0,0,0,0.08);
+            font-size: 0.72rem;
+            padding: 0.15rem 0.45rem;
+            border-radius: 9999px;
+        }
+
+        /* Action Buttons */
+        .btn-nav-map {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #0284c7;
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            padding: 0.35rem 0.75rem;
+            border-radius: var(--radius-md);
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+        .btn-nav-map:hover {
+            background: #e0f2fe;
+            color: #0369a1;
+        }
+        .btn-call-buyer {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #16a34a;
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            padding: 0.35rem 0.75rem;
+            border-radius: var(--radius-md);
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+        .btn-call-buyer:hover {
+            background: #dcfce7;
+            color: #15803d;
+        }
+        /* Modals */
+        .modal-backdrop {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        .modal-content {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            width: 100%;
+            max-width: 520px;
+            box-shadow: var(--shadow-xl);
+            padding: 1.75rem;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.25rem;
+            border-bottom: 1px solid var(--slate-200);
+            padding-bottom: 0.75rem;
+        }
+        .manifest-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+        }
+        .manifest-table th {
+            background: #f1f5f9;
+            color: #475569;
+            padding: 0.5rem 0.75rem;
+            text-align: left;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+        }
+        .manifest-table td {
+            padding: 0.6rem 0.75rem;
+            border-bottom: 1px solid #f1f5f9;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <header class="navbar">
+        <div class="container nav-container">
+            <a href="/index.html" class="brand-logo">
+                <div class="logo-icon">🌱</div>
+                <span>AgriSmart<span style="color:var(--primary-light);">Connect</span></span>
+                <span class="brand-badge" style="background:#ffedd5;color:#9a3412;">Driver Fleet</span>
+            </a>
+
+            <ul class="nav-links">
+                <li><a href="/index.html" class="nav-link">Home</a></li>
+                <li><a href="/marketplace.html" class="nav-link">Marketplace</a></li>
+                <li><a href="/delivery.html" class="nav-link active">Deliveries</a></li>
+            </ul>
+
+            <div class="nav-actions" id="nav-auth-actions">
+                <!-- Populated by api.js -->
+            </div>
+        </div>
+    </header>
+
+    <!-- HEADER -->
+    <section class="delivery-header">
+        <div class="container">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;">
+                <div>
+                    <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.35rem;">
+                        <span class="section-badge" style="color:#c2410c;margin-bottom:0;">Dispatch Logistics</span>
+                        <span class="badge badge-success" style="font-size:0.75rem;">🟢 On Duty / Fleet Active</span>
+                    </div>
+                    <h1 style="font-size:2.2rem;margin-bottom:0.25rem;">Delivery Partner Dispatch Station</h1>
+                    <p style="color:var(--slate-600);font-size:0.95rem;max-width:650px;">
+                        Manage farm collection runs, pickup packed batches from regional hubs, navigate routes, and fulfill handoffs to buyers.
+                    </p>
+                </div>
+                <div>
+                    <button class="btn btn-outline btn-sm" onclick="loadDeliveries()">🔄 Refresh Dispatch</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- MAIN DELIVERIES LIST -->
+    <main class="container" style="padding-bottom: 4rem;">
+        <!-- KPI METRICS ROW -->
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-label">Active Runs</div>
+                <div class="kpi-value" id="kpi-active-runs" style="color:#c2410c;">0</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Completed Today</div>
+                <div class="kpi-value" id="kpi-completed-runs" style="color:var(--primary-dark);">0</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Total Cargo Hauled</div>
+                <div class="kpi-value" id="kpi-cargo-weight" style="color:#0284c7;">0 kg</div>
+            </div>
+            <div class="kpi-card" style="display:flex;flex-direction:column;justify-content:space-between;">
+                <div>
+                    <div class="kpi-label">Shift Earnings</div>
+                    <div class="kpi-value" id="kpi-shift-earnings" style="color:#16a34a;">₹0</div>
+                </div>
+                <button class="btn btn-outline btn-sm" style="margin-top:0.5rem;font-size:0.75rem;padding:0.25rem 0.6rem;color:#16a34a;border-color:#86efac;background:#f0fdf4;" onclick="openDriverPayoutsModal()">
+                    💵 Payouts Ledger
+                </button>
+            </div>
+        </div>
+
+        <!-- FILTER TABS -->
+        <div class="filter-tabs">
+            <button class="filter-tab-btn active" id="tab-all" onclick="filterDeliveries('all')">
+                All Deliveries <span class="tab-counter" id="count-all">0</span>
+            </button>
+            <button class="filter-tab-btn" id="tab-active" onclick="filterDeliveries('active')">
+                🚀 My Active Trips <span class="tab-counter" id="count-active">0</span>
+            </button>
+            <button class="filter-tab-btn" id="tab-available" onclick="filterDeliveries('available')">
+                📦 Available at Hubs <span class="tab-counter" id="count-available">0</span>
+            </button>
+            <button class="filter-tab-btn" id="tab-delivered" onclick="filterDeliveries('delivered')">
+                ✓ Delivered History <span class="tab-counter" id="count-delivered">0</span>
+            </button>
+        </div>
+
+        <div id="deliveries-container">
+            <!-- Populated by delivery.js -->
+        </div>
+    </main>
+
+    <!-- DIGITAL PROOF OF DELIVERY (e-POD) SUBMISSION MODAL -->
+    <div id="epod-modal" class="modal-backdrop">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <h3 style="font-size:1.25rem;color:var(--slate-900);margin:0;">📦 Confirm Delivery & e-POD</h3>
+                    <p style="font-size:0.8rem;color:var(--slate-500);margin:0.25rem 0 0;">
+                        Delivery #<span id="pod-modal-delivery-id">--</span> (Order #<span id="pod-modal-order-id">--</span>)
+                    </p>
+                </div>
+                <button type="button" class="btn btn-outline btn-sm" onclick="closeEpodModal()">✕</button>
+            </div>
+
+            <form id="epod-form" onsubmit="event.preventDefault(); submitEpodDelivery();">
+                <!-- 1. OTP Handshake -->
+                <div class="form-group" style="margin-bottom:1.25rem;">
+                    <label class="form-label" style="font-weight:700;display:flex;justify-content:space-between;">
+                        <span>1. Buyer 4-Digit Handshake OTP *</span>
+                        <span id="pod-otp-hint" style="color:#0284c7;font-size:0.78rem;font-weight:600;"></span>
+                    </label>
+                    <input type="text" id="pod-otp-input" class="form-control" maxlength="4" placeholder="••••" required
+                           style="letter-spacing:8px;font-size:1.5rem;font-weight:800;text-align:center;background:#f8fafc;color:#0f172a;">
+                    <div style="font-size:0.75rem;color:var(--slate-500);margin-top:0.3rem;">
+                        Ask the recipient for their 4-digit verification code to confirm physical handoff.
+                    </div>
+                </div>
+
+                <!-- 2. Recipient Signature Canvas -->
+                <div class="form-group" style="margin-bottom:1.25rem;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.4rem;">
+                        <label class="form-label" style="font-weight:700;margin:0;">2. Recipient Digital Signature</label>
+                        <button type="button" class="btn btn-outline btn-sm" style="padding:0.2rem 0.5rem;font-size:0.75rem;" onclick="clearSignaturePad()">Clear</button>
+                    </div>
+                    <canvas id="pod-signature-canvas" width="460" height="120" 
+                            style="width:100%;height:120px;border:1px dashed #94a3b8;border-radius:8px;background:#ffffff;cursor:crosshair;touch-action:none;"></canvas>
+                    <div style="font-size:0.75rem;color:var(--slate-500);margin-top:0.25rem;">
+                        Buyer draws signature above with finger or stylus.
+                    </div>
+                </div>
+
+                <!-- 3. Photo Proof of Delivery -->
+                <div class="form-group" style="margin-bottom:1.25rem;">
+                    <label class="form-label" style="font-weight:700;">3. Delivery Crate Photo Proof</label>
+                    <input type="file" id="pod-photo-file" accept="image/*" class="form-control" onchange="handlePodPhotoSelect(event)">
+                    <div id="pod-photo-preview-wrap" style="display:none;margin-top:0.5rem;text-align:center;background:#f1f5f9;padding:0.5rem;border-radius:6px;">
+                        <img id="pod-preview-img" style="max-height:120px;border-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+                    </div>
+                </div>
+
+                <!-- 4. Notes -->
+                <div class="form-group" style="margin-bottom:1.5rem;">
+                    <label class="form-label" style="font-weight:700;">4. Handoff Notes</label>
+                    <input type="text" id="pod-notes-input" class="form-control" placeholder="e.g. Handed 4 crates to restaurant receiving bay, verified fresh.">
+                </div>
+
+                <div style="display:flex;justify-content:flex-end;gap:0.75rem;border-top:1px solid var(--slate-100);padding-top:1rem;">
+                    <button type="button" class="btn btn-outline" onclick="closeEpodModal()">Cancel</button>
+                    <button type="submit" id="epod-submit-btn" class="btn btn-primary" style="background:#16a34a;border-color:#16a34a;">
+                        ✓ Verify &amp; Unlock Payouts
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- DIGITAL PROOF OF DELIVERY (e-POD) RECEIPT VIEWER MODAL -->
+    <div id="epod-view-modal" class="modal-backdrop">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <h3 style="font-size:1.25rem;color:var(--slate-900);margin:0;">📜 Digital Proof of Delivery (e-POD)</h3>
+                    <span class="status-badge badge-paid" style="margin-top:0.25rem;">VERIFIED &amp; PAID</span>
+                </div>
+                <button type="button" class="btn btn-outline btn-sm" onclick="closeEpodViewModal()">✕</button>
+            </div>
+
+            <div id="epod-view-body" style="font-size:0.9rem;">
+                <!-- Populated dynamically -->
+            </div>
+
+            <div style="display:flex;justify-content:flex-end;margin-top:1.25rem;border-top:1px solid var(--slate-100);padding-top:1rem;">
+                <button type="button" class="btn btn-primary" onclick="closeEpodViewModal()">Close Receipt</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- DRIVER PAYOUTS LEDGER MODAL -->
+    <div id="driver-payouts-modal" class="modal-backdrop">
+        <div class="modal-content" style="max-width:620px;">
+            <div class="modal-header">
+                <div>
+                    <h3 style="font-size:1.3rem;color:var(--slate-900);margin:0;">💵 Driver Payouts & Earnings Wallet</h3>
+                    <p style="font-size:0.8rem;color:var(--slate-500);margin:0.25rem 0 0;">Itemized trip payouts, distance allowances, and disbursement status.</p>
+                </div>
+                <button type="button" class="btn btn-outline btn-sm" onclick="closeDriverPayoutsModal()">✕</button>
+            </div>
+
+            <!-- Wallet Stats -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:1.25rem;">
+                <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:0.85rem 1rem;">
+                    <div style="font-size:0.75rem;font-weight:700;color:#166534;text-transform:uppercase;">Total Settled (Paid)</div>
+                    <div id="payout-total-paid" style="font-size:1.4rem;font-weight:800;color:#15803d;">₹0.00</div>
+                </div>
+                <div style="background:#fefce8;border:1px solid #fef08a;border-radius:8px;padding:0.85rem 1rem;">
+                    <div style="font-size:0.75rem;font-weight:700;color:#854d0e;text-transform:uppercase;">Pending Disbursement</div>
+                    <div id="payout-pending-disb" style="font-size:1.4rem;font-weight:800;color:#a16207;">₹0.00</div>
+                </div>
+            </div>
+
+            <div id="driver-payouts-list" style="max-height:320px;overflow-y:auto;">
+                <!-- Populated by delivery.js -->
+            </div>
+
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:1.25rem;border-top:1px solid var(--slate-100);padding-top:1rem;">
+                <span style="font-size:0.78rem;color:var(--slate-500);">⚡ Automated daily transfers to registered UPI / Bank</span>
+                <button type="button" class="btn btn-outline btn-sm" onclick="closeDriverPayoutsModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="container footer-content">
+            <div style="display:flex;align-items:center;gap:0.75rem;">
+                <div class="logo-icon" style="width:28px;height:28px;font-size:0.9rem;">🌱</div>
+                <span style="font-weight:700;color:var(--slate-800);">AgriSmart Connect</span>
+                <span>© 2026</span>
+            </div>
+            <ul class="footer-links">
+                <li><a href="/index.html">Home</a></li>
+                <li><a href="/marketplace.html">Marketplace</a></li>
+                <li><a href="/delivery.html">Deliveries</a></li>
+            </ul>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="/js/api.js"></script>
+    <script src="/js/voice-guidance.js"></script>
+    <script src="/js/delivery.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.AgriVoice) window.AgriVoice.attachPageHeaderVoice('delivery');
+        });
+    </script>
+</body>
+</html>

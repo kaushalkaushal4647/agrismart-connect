@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgriSmart IoT - Smart Irrigation & Moisture Telemetry</title>
+    <meta name="description" content="Real-time ESP32 soil moisture monitoring, automated irrigation thresholds, and remote pump relay control.">
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .iot-header {
+            background: linear-gradient(135deg, rgba(209, 250, 229, 0.8), rgba(240, 253, 244, 1));
+            border-bottom: 1px solid var(--slate-200);
+            padding: 2.25rem 0;
+            margin-bottom: 2rem;
+        }
+
+        .device-badge-row {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-top: 0.75rem;
+        }
+
+        .iot-grid {
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: 2rem;
+            align-items: flex-start;
+        }
+
+        .telemetry-card {
+            background: var(--white);
+            border: 1px solid var(--slate-200);
+            border-radius: var(--radius-lg);
+            padding: 1.75rem;
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 1.5rem;
+        }
+
+        .gauge-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            padding: 1.5rem 0;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .gauge-metric {
+            text-align: center;
+        }
+
+        .gauge-circle {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            background: conic-gradient(var(--primary) calc(var(--percent, 58) * 1%), var(--slate-200) 0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 0.75rem;
+            position: relative;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.06);
+            transition: all 0.5s ease;
+        }
+
+        .gauge-inner {
+            width: 110px;
+            height: 110px;
+            background: var(--white);
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .gauge-value {
+            font-size: 1.85rem;
+            font-weight: 800;
+            color: var(--slate-900);
+            line-height: 1;
+        }
+
+        .gauge-label {
+            font-size: 0.75rem;
+            color: var(--slate-500);
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-top: 0.25rem;
+        }
+
+        .pump-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem 1.5rem;
+            border-radius: var(--radius-md);
+            font-weight: 700;
+            font-size: 1.1rem;
+            gap: 0.75rem;
+            transition: var(--transition-normal);
+        }
+
+        .pump-active {
+            background: #dcfce7;
+            color: #166534;
+            border: 2px solid #86efac;
+            box-shadow: 0 0 15px rgba(34, 197, 94, 0.35);
+            animation: pulse-pump 2s infinite;
+        }
+
+        .pump-inactive {
+            background: var(--slate-100);
+            color: var(--slate-600);
+            border: 2px solid var(--slate-300);
+        }
+
+        @keyframes pulse-pump {
+            0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
+            70% { box-shadow: 0 0 0 12px rgba(34, 197, 94, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+        }
+
+        .control-panel {
+            background: var(--white);
+            border: 1px solid var(--slate-200);
+            border-radius: var(--radius-lg);
+            padding: 1.75rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .mode-toggle-group {
+            display: flex;
+            border-radius: var(--radius-md);
+            background: var(--slate-100);
+            padding: 0.25rem;
+            gap: 0.25rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 0.65rem 1rem;
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.9rem;
+            border-radius: var(--radius-sm);
+            border: none;
+            background: transparent;
+            color: var(--slate-600);
+            cursor: pointer;
+            transition: var(--transition-fast);
+        }
+
+        .mode-btn.active {
+            background: var(--white);
+            color: var(--primary-dark);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .pump-btn {
+            width: 100%;
+            padding: 1rem;
+            font-size: 1.1rem;
+            font-weight: 700;
+            border-radius: var(--radius-md);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: var(--transition-fast);
+        }
+
+        .btn-pump-on {
+            background: #16a34a;
+            color: white;
+        }
+        .btn-pump-on:hover {
+            background: #15803d;
+        }
+
+        .btn-pump-off {
+            background: #dc2626;
+            color: white;
+        }
+        .btn-pump-off:hover {
+            background: #b91c1c;
+        }
+
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+            margin-top: 1rem;
+        }
+
+        .history-table th {
+            text-align: left;
+            padding: 0.6rem 0.75rem;
+            background: var(--slate-50);
+            color: var(--slate-600);
+            font-weight: 600;
+            border-bottom: 1px solid var(--slate-200);
+        }
+
+        .history-table td {
+            padding: 0.6rem 0.75rem;
+            border-bottom: 1px solid var(--slate-100);
+            color: var(--slate-800);
+        }
+
+        .safety-box {
+            background: #fffbeb;
+            border: 1px solid #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 1rem;
+            border-radius: var(--radius-sm);
+            margin-top: 1.5rem;
+            font-size: 0.85rem;
+            color: #92400e;
+            line-height: 1.45;
+        }
+
+        .sim-bar {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 900px) {
+            .iot-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <header class="navbar">
+        <div class="container nav-container">
+            <a href="/index.html" class="brand-logo">
+                <div class="logo-icon">🌱</div>
+                <span>AgriSmart<span style="color:var(--primary-light);">Connect</span></span>
+                <span class="brand-badge" style="background:#e0e7ff;color:#4338ca;">Smart IoT</span>
+            </a>
+
+            <ul class="nav-links">
+                <li><a href="/index.html" class="nav-link">Home</a></li>
+                <li><a href="/farmer.html" class="nav-link">Farmer Dashboard</a></li>
+                <li><a href="/marketplace.html" class="nav-link">Marketplace</a></li>
+                <li><a href="/ai.html" class="nav-link">AI Agronomist</a></li>
+                <li><a href="/iot.html" class="nav-link active">Smart IoT</a></li>
+            </ul>
+
+            <div class="nav-actions" id="nav-auth-actions">
+                <a href="/login.html" class="btn btn-outline btn-sm">Sign In</a>
+                <a href="/register.html" class="btn btn-primary btn-sm">Get Started</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- HEADER / HERO -->
+    <section class="iot-header">
+        <div class="container">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+                <div>
+                    <span class="badge badge-success">ESP32 Telemetry & Automation</span>
+                    <h1 style="font-size:2rem; font-weight:800; color:var(--slate-900); margin:0.35rem 0;">
+                        Precision Irrigation & Soil Telemetry
+                    </h1>
+                    <p style="color:var(--slate-600); max-width:680px; font-size:0.95rem; margin:0;">
+                        Live capacitive soil moisture telemetry streamed from field microcontrollers. Closed-loop automatic pump relays prevent underwatering while conserving groundwater.
+                    </p>
+                </div>
+                <div>
+                    <button class="btn btn-outline btn-sm" onclick="fetchIotStatus(true)">
+                        🔄 Refresh Now
+                    </button>
+                </div>
+            </div>
+
+            <!-- Device status meta -->
+            <div class="device-badge-row">
+                <span class="badge badge-info" id="device-id-badge">Device: ESP32-AGRI-01</span>
+                <span class="badge badge-success" id="device-conn-badge">● Online (Wi-Fi 2.4GHz)</span>
+                <span class="badge badge-neutral" id="last-sync-badge">Last Sync: Just now</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- MAIN DASHBOARD CONTENT -->
+    <main class="container mb-5">
+        <div class="iot-grid">
+
+            <!-- LEFT COLUMN: LIVE TELEMETRY -->
+            <div>
+                <!-- Primary Gauges -->
+                <div class="telemetry-card">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                        <h3 style="margin:0; font-size:1.15rem; font-weight:700;">Field Sensor Readings</h3>
+                        <span id="moisture-status-pill" class="badge badge-success">Optimal Moisture</span>
+                    </div>
+
+                    <div class="gauge-container">
+                        <!-- Soil Moisture Gauge -->
+                        <div class="gauge-metric">
+                            <div class="gauge-circle" id="moisture-gauge" style="--percent: 58;">
+                                <div class="gauge-inner">
+                                    <div class="gauge-value" id="moisture-val">58%</div>
+                                    <div class="gauge-label">Soil Moisture</div>
+                                </div>
+                            </div>
+                            <div style="font-size:0.8rem; color:var(--slate-500);">Capacitive v1.2 Sensor</div>
+                        </div>
+
+                        <!-- Soil Temperature -->
+                        <div class="gauge-metric">
+                            <div class="gauge-circle" style="background: conic-gradient(#f97316 70%, var(--slate-200) 0);">
+                                <div class="gauge-inner">
+                                    <div class="gauge-value" id="temp-val">28.2°</div>
+                                    <div class="gauge-label">Temperature</div>
+                                </div>
+                            </div>
+                            <div style="font-size:0.8rem; color:var(--slate-500);">Ambient Field Temp</div>
+                        </div>
+                    </div>
+
+                    <!-- Pump Status Indicator -->
+                    <div style="margin-top:1.5rem;">
+                        <div style="font-size:0.85rem; font-weight:600; color:var(--slate-600); margin-bottom:0.5rem;">
+                            Relay Output (Motor Contactor)
+                        </div>
+                        <div id="pump-indicator-box" class="pump-indicator pump-inactive">
+                            <span id="pump-indicator-icon">⏹️</span>
+                            <span id="pump-indicator-text">PUMP STATUS: STANDBY (OFF)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Telemetry History -->
+                <div class="telemetry-card">
+                    <h3 style="margin:0 0 0.5rem 0; font-size:1.1rem; font-weight:700;">Recent Sensor Log</h3>
+                    <p style="font-size:0.85rem; color:var(--slate-500); margin:0;">Logged telemetry points from the ESP32 field device.</p>
+                    
+                    <div style="overflow-x:auto;">
+                        <table class="history-table">
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>Soil Moisture</th>
+                                    <th>Relay State</th>
+                                    <th>Condition</th>
+                                </tr>
+                            </thead>
+                            <tbody id="telemetry-table-body">
+                                <tr>
+                                    <td colspan="4" style="text-align:center; padding:1.5rem; color:var(--slate-400);">Loading historical telemetry...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT COLUMN: CONTROL CONSOLE -->
+            <div>
+                <!-- Pump Relay Console -->
+                <div class="control-panel">
+                    <h3 style="margin:0 0 0.25rem 0; font-size:1.15rem; font-weight:700;">Irrigation Control Console</h3>
+                    <p style="font-size:0.85rem; color:var(--slate-500); margin-bottom:1.25rem;">
+                        Toggle between automatic sensor-driven irrigation and manual farmer overrides.
+                    </p>
+
+                    <!-- Mode Selector -->
+                    <label style="font-size:0.85rem; font-weight:600; color:var(--slate-700); margin-bottom:0.4rem; display:block;">
+                        Operating Mode:
+                    </label>
+                    <div class="mode-toggle-group">
+                        <button class="mode-btn active" id="btn-mode-auto" onclick="setOperatingMode('AUTO')">
+                            🤖 AUTO (Sensor Rule)
+                        </button>
+                        <button class="mode-btn" id="btn-mode-manual" onclick="setOperatingMode('MANUAL')">
+                            ✋ MANUAL (Override)
+                        </button>
+                    </div>
+
+                    <!-- Manual Pump Action Button -->
+                    <div id="manual-control-section" style="margin-bottom:1.5rem;">
+                        <label style="font-size:0.85rem; font-weight:600; color:var(--slate-700); margin-bottom:0.4rem; display:block;">
+                            Manual Relay Switch:
+                        </label>
+                        <button id="main-pump-toggle-btn" class="pump-btn btn-pump-on" onclick="togglePumpAction()">
+                            ⚡ TURN PUMP ON
+                        </button>
+                        <div id="manual-hint" style="font-size:0.75rem; color:var(--slate-500); margin-top:0.4rem; text-align:center;">
+                            Switching to MANUAL allows immediate pump triggering.
+                        </div>
+                    </div>
+
+                    <!-- Auto Threshold Configuration -->
+                    <div style="border-top:1px solid var(--slate-200); padding-top:1.25rem;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+                            <label style="font-size:0.85rem; font-weight:600; color:var(--slate-700);">
+                                Auto-Trigger Threshold:
+                            </label>
+                            <span id="threshold-display" style="font-weight:700; color:var(--primary-dark); font-size:0.95rem;">35%</span>
+                        </div>
+                        <input type="range" id="threshold-slider" min="15" max="60" value="35" step="1" 
+                               style="width:100%; cursor:pointer;" oninput="updateThresholdValue(this.value)">
+                        <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:var(--slate-500); margin-top:0.25rem;">
+                            <span>15% (Arid)</span>
+                            <span>35% (Recommended)</span>
+                            <span>60% (Moist)</span>
+                        </div>
+                        <button class="btn btn-outline btn-sm btn-block" style="margin-top:0.75rem;" onclick="saveThreshold()">
+                            Save Threshold Settings
+                        </button>
+                    </div>
+
+                    <!-- Field Simulator (For demonstration without physical hardware) -->
+                    <div style="border-top:1px solid var(--slate-200); padding-top:1.25rem; margin-top:1.25rem;">
+                        <label style="font-size:0.85rem; font-weight:700; color:var(--slate-800); display:block; margin-bottom:0.25rem;">
+                            🧪 Field Test Simulator
+                        </label>
+                        <p style="font-size:0.75rem; color:var(--slate-500); margin-bottom:0.5rem;">
+                            Simulate incoming ESP32 sensor values to test the auto-trigger logic:
+                        </p>
+                        <div class="sim-bar">
+                            <button class="btn btn-sm btn-outline" onclick="simulateTelemetry(28.0)">
+                                🍂 Dry Soil (28%)
+                            </button>
+                            <button class="btn btn-sm btn-outline" onclick="simulateTelemetry(52.0)">
+                                🌿 Moist Soil (52%)
+                            </button>
+                            <button class="btn btn-sm btn-outline" onclick="simulateTelemetry(75.0)">
+                                🌊 Saturated (75%)
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Safety Warning Box -->
+                    <div class="safety-box">
+                        <strong>⚠️ Industrial High-Power AC Safety Notice:</strong>
+                        <p style="margin:0.25rem 0 0 0;">
+                            Agricultural pump motors (1HP - 10HP) require an electromagnetic AC contactor with snubber network & thermal overload relays. Never connect motor mains directly across 5V hobby relay contacts.
+                        </p>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- SCRIPT LOGIC -->
+    <script src="/js/i18n.js"></script>
+    <script src="/js/api.js"></script>
+    <script>
+        let currentMode = 'AUTO';
+        let currentPump = 'OFF';
+        let currentThreshold = 35.0;
+        let pollTimer = null;
+
+        // Initialize dashboard — supports farmers, admins, and interactive hardware testing
+        document.addEventListener('DOMContentLoaded', () => {
+            const user = typeof getCurrentUser === 'function' ? getCurrentUser() : null;
+            const isAuthorized = user && (user.role === 'farmer' || user.role === 'admin');
+            
+            if (!isAuthorized) {
+                const banner = document.createElement('div');
+                banner.id = 'demo-mode-banner';
+                banner.style.cssText = 'background:#fef3c7; color:#92400e; border:1px solid #fcd34d; padding:0.75rem 1rem; border-radius:8px; margin-bottom:1.5rem; display:flex; justify-content:space-between; align-items:center; font-size:0.9rem; font-weight:600; flex-wrap:wrap; gap:0.5rem;';
+                banner.innerHTML = `
+                    <span>⚡ <strong>Interactive Mode:</strong> You can test and toggle the pump relay, adjust soil thresholds, and simulate field telemetry.</span>
+                    <div style="display:flex; gap:0.5rem;">
+                        <button onclick="enableDemoFarmerSession()" style="background:#d97706; color:#fff; border:none; padding:0.4rem 0.9rem; border-radius:6px; cursor:pointer; font-weight:700; font-size:0.82rem;">Sign In as Demo Farmer</button>
+                        <a href="/login.html" style="background:#fff; color:#92400e; border:1px solid #d97706; padding:0.4rem 0.9rem; border-radius:6px; text-decoration:none; font-size:0.82rem;">Sign In</a>
+                    </div>
+                `;
+                const container = document.querySelector('.container') || document.querySelector('main');
+                if (container) container.prepend(banner);
+            }
+
+            fetchIotStatus();
+            // Poll every 6 seconds for live updates
+            pollTimer = setInterval(fetchIotStatus, 6000);
+        });
+
+        function enableDemoFarmerSession() {
+            const demoUser = {
+                user_id: 1,
+                name: 'Ramesh Farmer (Demo)',
+                email: 'farmer@agrismart.com',
+                role: 'farmer'
+            };
+            if (typeof setCurrentUser === 'function') setCurrentUser(demoUser);
+            location.reload();
+        }
+
+        async function fetchIotStatus(showToast = false) {
+            try {
+                const res = await apiFetch('/iot/status');
+                if (res && res.status === 'success') {
+                    renderIotState(res.live);
+                    renderTelemetryHistory(res.history || []);
+                    if (showToast) {
+                        alert('Telemetry synced successfully.');
+                    }
+                }
+            } catch (err) {
+                console.warn('IoT telemetry sync notice:', err.message);
+                if (showToast) {
+                    alert('Running in local simulation mode. Connected to virtual ESP32 controller.');
+                }
+            }
+        }
+
+        function renderIotState(state) {
+            if (!state) return;
+
+            currentMode = state.mode || 'AUTO';
+            currentPump = (state.pump_status || 'OFF').toUpperCase();
+            currentThreshold = parseFloat(state.auto_threshold_pct || 35.0);
+
+            // Soil Moisture Gauge
+            const moisture = parseFloat(state.soil_moisture_pct || 0).toFixed(1);
+            const gauge = document.getElementById('moisture-gauge');
+            const valEl = document.getElementById('moisture-val');
+            valEl.textContent = `${moisture}%`;
+            gauge.style.setProperty('--percent', moisture);
+
+            // Soil status pill
+            const statusPill = document.getElementById('moisture-status-pill');
+            if (moisture < currentThreshold) {
+                statusPill.className = 'badge badge-warning';
+                statusPill.textContent = 'Dry - Needs Water';
+                gauge.style.background = `conic-gradient(#ef4444 calc(${moisture} * 1%), var(--slate-200) 0)`;
+            } else if (moisture > 75) {
+                statusPill.className = 'badge badge-info';
+                statusPill.textContent = 'Soil Saturated';
+                gauge.style.background = `conic-gradient(#3b82f6 calc(${moisture} * 1%), var(--slate-200) 0)`;
+            } else {
+                statusPill.className = 'badge badge-success';
+                statusPill.textContent = 'Optimal Moisture';
+                gauge.style.background = `conic-gradient(var(--primary) calc(${moisture} * 1%), var(--slate-200) 0)`;
+            }
+
+            // Temperature
+            const temp = parseFloat(state.temperature_c || 28.0).toFixed(1);
+            document.getElementById('temp-val').textContent = `${temp}°C`;
+
+            // Pump Box & Toggle Button
+            const pumpBox = document.getElementById('pump-indicator-box');
+            const pumpIcon = document.getElementById('pump-indicator-icon');
+            const pumpText = document.getElementById('pump-indicator-text');
+            const toggleBtn = document.getElementById('main-pump-toggle-btn');
+
+            if (currentPump === 'ON') {
+                pumpBox.className = 'pump-indicator pump-active';
+                pumpIcon.textContent = '💧';
+                pumpText.textContent = `PUMP ACTIVE (RUNNING - ${currentMode} MODE)`;
+                toggleBtn.className = 'pump-btn btn-pump-off';
+                toggleBtn.innerHTML = '🛑 STOP WATER PUMP';
+            } else {
+                pumpBox.className = 'pump-indicator pump-inactive';
+                pumpIcon.textContent = '⏹️';
+                pumpText.textContent = `PUMP STANDBY (OFF - ${currentMode} MODE)`;
+                toggleBtn.className = 'pump-btn btn-pump-on';
+                toggleBtn.innerHTML = '⚡ TURN PUMP ON';
+            }
+
+            // Mode buttons
+            const btnAuto = document.getElementById('btn-mode-auto');
+            const btnManual = document.getElementById('btn-mode-manual');
+            if (currentMode === 'AUTO') {
+                btnAuto.classList.add('active');
+                btnManual.classList.remove('active');
+            } else {
+                btnManual.classList.add('active');
+                btnAuto.classList.remove('active');
+            }
+
+            // Device details
+            if (state.device_id) {
+                document.getElementById('device-id-badge').textContent = `Device: ${state.device_id}`;
+            }
+            if (state.last_updated) {
+                const date = new Date(state.last_updated);
+                document.getElementById('last-sync-badge').textContent = `Last Sync: ${date.toLocaleTimeString()}`;
+            }
+
+            // Threshold slider
+            document.getElementById('threshold-slider').value = currentThreshold;
+            document.getElementById('threshold-display').textContent = `${currentThreshold}%`;
+        }
+
+        function renderTelemetryHistory(history) {
+            const tbody = document.getElementById('telemetry-table-body');
+            if (!history || history.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:1.5rem; color:var(--slate-400);">No sensor history yet.</td></tr>';
+                return;
+            }
+
+            const rows = history.slice(-8).reverse().map(item => {
+                const isPumpOn = (item.pump || '').toUpperCase() === 'ON';
+                const cond = item.moisture < 35 ? 'Dry' : (item.moisture > 70 ? 'Wet' : 'Optimal');
+                const condBadge = item.moisture < 35 ? 'badge-warning' : (item.moisture > 70 ? 'badge-info' : 'badge-success');
+
+                return `
+                    <tr>
+                        <td><strong>${item.timestamp}</strong></td>
+                        <td>${parseFloat(item.moisture).toFixed(1)}%</td>
+                        <td>
+                            <span class="badge ${isPumpOn ? 'badge-success' : 'badge-neutral'}">
+                                ${item.pump}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge ${condBadge}">${cond}</span>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            tbody.innerHTML = rows;
+        }
+
+        async function setOperatingMode(mode) {
+            try {
+                const res = await apiFetch('/iot/pump-control', {
+                    method: 'POST',
+                    body: JSON.stringify({ mode: mode })
+                });
+                if (res && res.status === 'success') {
+                    renderIotState(res.state);
+                }
+            } catch (err) {
+                console.warn('API error during mode switch, applying local state:', err);
+                currentMode = mode;
+                renderIotState({
+                    soil_moisture_pct: parseFloat(document.getElementById('moisture-val').textContent) || 58.5,
+                    temperature_c: parseFloat(document.getElementById('temp-val').textContent) || 28.2,
+                    pump_status: currentPump,
+                    mode: mode,
+                    auto_threshold_pct: currentThreshold,
+                    last_updated: new Date().toISOString(),
+                    device_id: 'ESP32-AGRI-01'
+                });
+            }
+        }
+
+        async function togglePumpAction() {
+            const toggleBtn = document.getElementById('main-pump-toggle-btn');
+            const targetState = currentPump === 'ON' ? 'OFF' : 'ON';
+            const originalHtml = toggleBtn.innerHTML;
+
+            toggleBtn.disabled = true;
+            toggleBtn.style.opacity = '0.7';
+            toggleBtn.innerHTML = '⏳ Communicating with Relay...';
+
+            try {
+                const res = await apiFetch('/iot/pump-control', {
+                    method: 'POST',
+                    body: JSON.stringify({ 
+                        pump_status: targetState,
+                        mode: 'MANUAL' // Overriding pump manually puts it in manual mode
+                    })
+                });
+                if (res && res.status === 'success') {
+                    renderIotState(res.state);
+                } else if (res && res.live) {
+                    renderIotState(res.live);
+                }
+            } catch (err) {
+                console.warn('Backend pump-control error, applying responsive state:', err);
+                currentPump = targetState;
+                currentMode = 'MANUAL';
+                renderIotState({
+                    soil_moisture_pct: parseFloat(document.getElementById('moisture-val').textContent) || 58.5,
+                    temperature_c: parseFloat(document.getElementById('temp-val').textContent) || 28.2,
+                    pump_status: targetState,
+                    mode: 'MANUAL',
+                    auto_threshold_pct: currentThreshold,
+                    last_updated: new Date().toISOString(),
+                    device_id: 'ESP32-AGRI-01'
+                });
+            } finally {
+                toggleBtn.disabled = false;
+                toggleBtn.style.opacity = '1';
+            }
+        }
+
+        function updateThresholdValue(val) {
+            document.getElementById('threshold-display').textContent = `${val}%`;
+        }
+
+        async function saveThreshold() {
+            const val = parseFloat(document.getElementById('threshold-slider').value);
+            try {
+                const res = await apiFetch('/iot/pump-control', {
+                    method: 'POST',
+                    body: JSON.stringify({ threshold_pct: val })
+                });
+                if (res && res.status === 'success') {
+                    alert(`Threshold saved! Automatic pump will trigger when soil falls below ${val}%.`);
+                    renderIotState(res.state);
+                }
+            } catch (err) {
+                console.warn('Backend saveThreshold error, applying locally:', err);
+                currentThreshold = val;
+                alert(`Threshold saved! Automatic pump will trigger when soil falls below ${val}%.`);
+                renderIotState({
+                    soil_moisture_pct: parseFloat(document.getElementById('moisture-val').textContent) || 58.5,
+                    temperature_c: parseFloat(document.getElementById('temp-val').textContent) || 28.2,
+                    pump_status: currentPump,
+                    mode: currentMode,
+                    auto_threshold_pct: val,
+                    last_updated: new Date().toISOString(),
+                    device_id: 'ESP32-AGRI-01'
+                });
+            }
+        }
+
+        async function simulateTelemetry(moistureVal) {
+            try {
+                const res = await apiFetch('/iot/telemetry', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        device_id: 'ESP32-AGRI-01',
+                        moisture_pct: moistureVal,
+                        temperature_c: 29.5
+                    })
+                });
+                if (res && res.status === 'success') {
+                    fetchIotStatus();
+                }
+            } catch (err) {
+                console.warn('Simulation network notice, applying locally:', err);
+                let autoPump = currentPump;
+                if (currentMode === 'AUTO') {
+                    if (moistureVal < currentThreshold) autoPump = 'ON';
+                    else if (moistureVal >= 60.0) autoPump = 'OFF';
+                }
+                currentPump = autoPump;
+                renderIotState({
+                    soil_moisture_pct: moistureVal,
+                    temperature_c: 29.5,
+                    pump_status: autoPump,
+                    mode: currentMode,
+                    auto_threshold_pct: currentThreshold,
+                    last_updated: new Date().toISOString(),
+                    device_id: 'ESP32-AGRI-01'
+                });
+            }
+        }
+    </script>
+    <script src="/js/voice-guidance.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.AgriVoice) window.AgriVoice.attachPageHeaderVoice('irrigation');
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgriSmart Connect - Demand-Matched Agricultural Marketplace</title>
+    <meta name="description" content="A demand-matched agricultural ecosystem connecting farmers, buyers, and regional collection hubs with dynamic matching and zero pre-procurement waste.">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <header class="navbar">
+        <div class="container nav-container">
+            <a href="/index.html" class="brand-logo">
+                <div class="logo-icon">🌱</div>
+                <span>AgriSmart<span style="color:var(--primary-light);">Connect</span></span>
+                <span class="brand-badge">Core</span>
+            </a>
+
+            <ul class="nav-links">
+                <li><a href="/index.html" class="nav-link active">Home</a></li>
+                <li><a href="#how-it-works" class="nav-link">How It Works</a></li>
+                <li><a href="#roles" class="nav-link">Role Portals</a></li>
+                <li><a href="/marketplace.html" class="nav-link">Marketplace</a></li>
+            </ul>
+
+            <div class="nav-actions" id="nav-auth-actions">
+                <a href="/login.html" class="btn btn-outline btn-sm">Sign In</a>
+                <a href="/register.html" class="btn btn-primary btn-sm">Get Started</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main>
+        <!-- HERO SECTION -->
+        <section class="hero-section">
+            <div class="container">
+                <div class="hero-content">
+                    <div class="hero-pill">
+                        <span>🚀 Next-Gen Agricultural Logistics</span>
+                    </div>
+
+                    <h1 class="hero-title">
+                        Demand-Matched <span>Agricultural Supply</span> Platform
+                    </h1>
+
+                    <p class="hero-subtitle">
+                        AgriSmart Connect matches farmer harvest schedules directly with real-time consumer and B2B demand. No speculative over-purchasing, zero spoilage, and verified quality through regional collection hubs.
+                    </p>
+
+                    <div class="hero-actions">
+                        <a href="/register.html" class="btn btn-primary btn-lg">Join the Network</a>
+                        <a href="#roles" class="btn btn-outline btn-lg">Explore Portals</a>
+                    </div>
+
+                    <!-- Realtime System Status -->
+                    <div class="system-health-banner" id="health-banner">
+                        <span class="status-dot" id="system-dot"></span>
+                        <span id="system-status-text">Checking platform status...</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- HOW IT WORKS -->
+        <section class="section" id="how-it-works">
+            <div class="container">
+                <div class="section-header">
+                    <span class="section-badge">Architecture</span>
+                    <h2 class="section-title">The Demand-First Marketplace</h2>
+                    <p class="section-desc">
+                        Our dynamic engine eliminates the risk of unsold inventory by pairing produce to verified buyers before harvesting begins.
+                    </p>
+                </div>
+
+                <div class="workflow-grid">
+                    <!-- Step 1 -->
+                    <div class="workflow-card">
+                        <span class="step-number">01</span>
+                        <div class="workflow-icon">🌾</div>
+                        <h3>Farmer Lists Produce</h3>
+                        <p>Farmers submit crop variety, expected yield (kg), minimum price, harvest date, and GPS coordinates.</p>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div class="workflow-card">
+                        <span class="step-number">02</span>
+                        <div class="workflow-icon">🛒</div>
+                        <h3>Buyers Create Demand</h3>
+                        <p>Consumers, restaurants, and retailers post specific quantity requirements and preferred delivery dates.</p>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div class="workflow-card">
+                        <span class="step-number">03</span>
+                        <div class="workflow-icon">⚡</div>
+                        <h3>Dynamic Matching</h3>
+                        <p>The matching algorithm computes optimal pairs based on harvest timing, proximity, price, and quality grade.</p>
+                    </div>
+
+                    <!-- Step 4 -->
+                    <div class="workflow-card">
+                        <span class="step-number">04</span>
+                        <div class="workflow-icon">🏢</div>
+                        <h3>Hub Quality Check</h3>
+                        <p>Produce arrives at regional collection hubs for digital weighing, physical grading, sorting, and packing.</p>
+                    </div>
+
+                    <!-- Step 5 -->
+                    <div class="workflow-card">
+                        <span class="step-number">05</span>
+                        <div class="workflow-icon">🚚</div>
+                        <h3>Dispatch & Payout</h3>
+                        <p>Delivery partners complete the final leg while automated split payouts disburse fair earnings to farmers.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ROLE PORTALS -->
+        <section class="section" style="background-color: var(--white);" id="roles">
+            <div class="container">
+                <div class="section-header">
+                    <span class="section-badge">Access Portals</span>
+                    <h2 class="section-title">Designed for Every Participant</h2>
+                    <p class="section-desc">Select your role to access dedicated dashboards, inventory tools, and matching pipelines.</p>
+                </div>
+
+                <div class="role-grid">
+                    <!-- Farmer -->
+                    <div class="role-card">
+                        <div>
+                            <div class="role-header">
+                                <div class="role-icon">🧑‍🌾</div>
+                                <div>
+                                    <span class="role-tag role-tag-farmer">Producer</span>
+                                    <h3>Farmer Portal</h3>
+                                </div>
+                            </div>
+                            <p style="color:var(--slate-600);font-size:0.95rem;">List upcoming harvests, receive confirmed buyer matches, and track collection and payouts.</p>
+                            <ul class="role-features">
+                                <li>Produce listing with price floors</li>
+                                <li>Real-time demand notification</li>
+                                <li>Automated fair payout ledger</li>
+                            </ul>
+                        </div>
+                        <a href="/farmer.html" class="btn btn-outline btn-block">Open Farmer Portal</a>
+                    </div>
+
+                    <!-- Consumer -->
+                    <div class="role-card">
+                        <div>
+                            <div class="role-header">
+                                <div class="role-icon">🥗</div>
+                                <div>
+                                    <span class="role-tag role-tag-consumer">Consumer</span>
+                                    <h3>Direct Consumer</h3>
+                                </div>
+                            </div>
+                            <p style="color:var(--slate-600);font-size:0.95rem;">Buy farm-fresh vegetables and fruits harvested directly upon order with full traceability.</p>
+                            <ul class="role-features">
+                                <li>Harvest-fresh farm produce</li>
+                                <li>Locality & distance filters</li>
+                                <li>Full farm-to-table tracking</li>
+                            </ul>
+                        </div>
+                        <a href="/consumer.html" class="btn btn-outline btn-block">Open Consumer Portal</a>
+                    </div>
+
+                    <!-- Restaurant -->
+                    <div class="role-card">
+                        <div>
+                            <div class="role-header">
+                                <div class="role-icon">🍽️</div>
+                                <div>
+                                    <span class="role-tag role-tag-business">B2B Buyer</span>
+                                    <h3>Restaurant Bulk</h3>
+                                </div>
+                            </div>
+                            <p style="color:var(--slate-600);font-size:0.95rem;">Lock in recurring weekly requirements (e.g. 100 kg Tomato) with guaranteed quality grading.</p>
+                            <ul class="role-features">
+                                <li>Recurring supply contracts</li>
+                                <li>Batch grade specification</li>
+                                <li>Predictable pricing and billing</li>
+                            </ul>
+                        </div>
+                        <a href="/restaurant.html" class="btn btn-outline btn-block">Open Restaurant Portal</a>
+                    </div>
+
+                    <!-- Retailer -->
+                    <div class="role-card">
+                        <div>
+                            <div class="role-header">
+                                <div class="role-icon">🏪</div>
+                                <div>
+                                    <span class="role-tag role-tag-business">Wholesale</span>
+                                    <h3>Retailer Wholesale</h3>
+                                </div>
+                            </div>
+                            <p style="color:var(--slate-600);font-size:0.95rem;">Aggregate multi-farmer volume for retail grocery shelves with reliable hub fulfillment.</p>
+                            <ul class="role-features">
+                                <li>High-volume produce batching</li>
+                                <li>Regional collection coordination</li>
+                                <li>Tax-compliant invoicing</li>
+                            </ul>
+                        </div>
+                        <a href="/retailer.html" class="btn btn-outline btn-block">Open Retailer Portal</a>
+                    </div>
+
+                    <!-- Hub Operator -->
+                    <div class="role-card">
+                        <div>
+                            <div class="role-header">
+                                <div class="role-icon">🏬</div>
+                                <div>
+                                    <span class="role-tag role-tag-hub">Operations</span>
+                                    <h3>Hub Operator</h3>
+                                </div>
+                            </div>
+                            <p style="color:var(--slate-600);font-size:0.95rem;">Weigh incoming farmer consignments, record QA checks, sort, pack, and prepare dispatch.</p>
+                            <ul class="role-features">
+                                <li>Digital intake & weight scales</li>
+                                <li>Quality grade logging</li>
+                                <li>Packing and dispatch queues</li>
+                            </ul>
+                        </div>
+                        <a href="/hub.html" class="btn btn-outline btn-block">Open Hub Console</a>
+                    </div>
+
+                    <!-- Admin -->
+                    <div class="role-card">
+                        <div>
+                            <div class="role-header">
+                                <div class="role-icon">📊</div>
+                                <div>
+                                    <span class="role-tag role-tag-admin">Super Admin</span>
+                                    <h3>Admin & Analytics</h3>
+                                </div>
+                            </div>
+                            <p style="color:var(--slate-600);font-size:0.95rem;">Platform overview, matching engine tuning, surplus liquidation, and financial health.</p>
+                            <ul class="role-features">
+                                <li>Market supply & demand balance</li>
+                                <li>Matching weight configuration</li>
+                                <li>Surplus & spoilage reduction</li>
+                            </ul>
+                        </div>
+                        <a href="/admin.html" class="btn btn-outline btn-block">Open Admin Console</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="container footer-content">
+            <div style="display:flex;align-items:center;gap:0.75rem;">
+                <div class="logo-icon" style="width:28px;height:28px;font-size:0.9rem;">🌱</div>
+                <span style="font-weight:700;color:var(--slate-800);">AgriSmart Connect</span>
+                <span>© 2026. All rights reserved.</span>
+            </div>
+            <ul class="footer-links">
+                <li><a href="/login.html">Sign In</a></li>
+                <li><a href="/register.html">Register</a></li>
+                <li><a href="/api/health" target="_blank">API Health</a></li>
+                <li><a href="/api/db-test" target="_blank">Database Test</a></li>
+            </ul>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="/js/i18n.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/voice-guidance.js"></script>
+    <script>
+        // Check platform and database status on landing page
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Attach voice header for home page
+            if (window.AgriVoice) window.AgriVoice.attachPageHeaderVoice('home');
+
+            const dot = document.getElementById('system-dot');
+            const text = document.getElementById('system-status-text');
+
+            try {
+                const health = await checkSystemHealth();
+                const db = await checkDatabaseHealth();
+
+                if (health.status === 'healthy' && db.status === 'connected') {
+                    dot.className = 'status-dot active';
+                    text.innerHTML = `<strong>Online</strong> — PostgreSQL (${db.tables_count} Tables Active) & Flask API Operational`;
+                } else if (health.status === 'healthy') {
+                    dot.className = 'status-dot';
+                    dot.style.backgroundColor = 'var(--status-warning)';
+                    text.innerHTML = `<strong>API Online</strong> — Database connecting (Run <code>python backend/init_db.py</code>)`;
+                } else {
+                    dot.className = 'status-dot error';
+                    text.innerHTML = `Backend offline — Start with <code>python backend/app.py</code>`;
+                }
+            } catch {
+                dot.className = 'status-dot error';
+                text.innerHTML = `Backend offline — Start with <code>python backend/app.py</code>`;
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Logistics Command Center & Tamil Nadu Map - AgriSmart Connect</title>
+    <meta name="description" content="Intelligent agricultural supply-chain optimization: Tamil Nadu collection hubs, XGBoost demand forecasting, and Google OR-Tools delivery route planning.">
+    <link rel="stylesheet" href="/css/style.css">
+    <!-- Leaflet Map CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <style>
+        .logistics-header {
+            background: linear-gradient(135deg, #064e3b 0%, #0f172a 100%);
+            color: #fff;
+            padding: 2.25rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .logistics-container {
+            display: grid;
+            grid-template-columns: 340px 1fr;
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+            margin-bottom: 3rem;
+            min-height: 750px;
+        }
+        @media (max-width: 1024px) {
+            .logistics-container {
+                grid-template-columns: 1fr;
+            }
+        }
+        .sidebar-card {
+            background: var(--white);
+            border: 1px solid var(--slate-200);
+            border-radius: var(--radius-lg);
+            padding: 1.25rem;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+            max-height: 750px;
+            overflow-y: auto;
+        }
+        .map-wrapper {
+            background: var(--white);
+            border: 1px solid var(--slate-200);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+        #tamilnadu-map {
+            width: 100%;
+            height: 100%;
+            min-height: 720px;
+            z-index: 1;
+        }
+        .map-legend {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(6px);
+            border: 1px solid var(--slate-300);
+            border-radius: var(--radius-md);
+            padding: 0.85rem 1.15rem;
+            z-index: 1000;
+            font-size: 0.8rem;
+            box-shadow: var(--shadow-md);
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.35rem;
+            font-weight: 600;
+        }
+        .legend-item:last-child {
+            margin-bottom: 0;
+        }
+        .legend-badge {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .kpi-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        .kpi-box {
+            background: var(--white);
+            border: 1px solid var(--slate-200);
+            border-radius: var(--radius-md);
+            padding: 1rem 1.25rem;
+            box-shadow: var(--shadow-sm);
+        }
+        .kpi-box-val {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--slate-900);
+        }
+        .kpi-box-lbl {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            font-weight: 700;
+            color: var(--slate-500);
+            letter-spacing: 0.5px;
+        }
+        .alert-card {
+            border-left: 4px solid var(--primary);
+            background: var(--slate-50);
+            padding: 0.75rem 0.9rem;
+            border-radius: 4px;
+            font-size: 0.82rem;
+            line-height: 1.4;
+            margin-bottom: 0.6rem;
+        }
+        .alert-shortage {
+            border-left-color: #ef4444;
+            background: #fef2f2;
+            color: #991b1b;
+        }
+        .alert-overstock {
+            border-left-color: #f59e0b;
+            background: #fffbeb;
+            color: #92400e;
+        }
+        .alert-optimal {
+            border-left-color: #10b981;
+            background: #f0fdf4;
+            color: #065f46;
+        }
+        .route-info-box {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: var(--radius-md);
+            padding: 1rem;
+            font-size: 0.85rem;
+        }
+        .custom-popup .leaflet-popup-content-wrapper {
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <header class="navbar">
+        <div class="container nav-container">
+            <a href="/index.html" class="brand-logo">
+                <div class="logo-icon">🌱</div>
+                <span>AgriSmart<span style="color:var(--primary-light);">Connect</span></span>
+                <span class="brand-badge" style="background:#dcfce7;color:#15803d;">AI Logistics</span>
+            </a>
+
+            <ul class="nav-links">
+                <li><a href="/index.html" class="nav-link">Home</a></li>
+                <li><a href="/marketplace.html" class="nav-link">Marketplace</a></li>
+                <li><a href="/farmer.html" class="nav-link">Farmer Portal</a></li>
+                <li><a href="/hub.html" class="nav-link">Hub Operations</a></li>
+                <li><a href="/logistics.html" class="nav-link active">AI Logistics Map</a></li>
+                <li><a href="/admin.html" class="nav-link">Admin Console</a></li>
+            </ul>
+
+            <div class="nav-actions" id="nav-auth-actions"></div>
+        </div>
+    </header>
+
+    <!-- HEADER & OVERVIEW -->
+    <section class="logistics-header">
+        <div class="container">
+            <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:1.5rem;">
+                <div>
+                    <span style="font-size:0.8rem;text-transform:uppercase;letter-spacing:1px;color:#86efac;font-weight:700;">
+                        Tamil Nadu Regional Network • Powered by XGBoost & OR-Tools
+                    </span>
+                    <h1 style="font-size:2.3rem;margin:0.25rem 0 0.5rem;color:#fff;">Logistics & Route Command Center</h1>
+                    <p style="color:#cbd5e1;font-size:0.95rem;max-width:700px;margin:0;">
+                        Live supply-demand orchestration: 15 regional collection hubs, distributed farmer harvests, and mathematical delivery route optimization across all 38 Tamil Nadu districts.
+                    </p>
+                </div>
+                <div style="display:flex;gap:0.75rem;">
+                    <button class="btn btn-outline btn-sm" style="color:#fff;border-color:rgba(255,255,255,0.4);" onclick="refreshLogisticsData()">
+                        🔄 Sync Network Data
+                    </button>
+                    <button class="btn btn-primary btn-sm" onclick="triggerRouteOptimization()">
+                        ⚡ Run OR-Tools Route Optimizer
+                    </button>
+                </div>
+            </div>
+
+            <!-- METRIC CARDS -->
+            <div class="kpi-row">
+                <div class="kpi-box">
+                    <div class="kpi-box-lbl">Tamil Nadu Farmers</div>
+                    <div class="kpi-box-val" id="kpi-farmers">--</div>
+                </div>
+                <div class="kpi-box">
+                    <div class="kpi-box-lbl">Planned Regional Hubs</div>
+                    <div class="kpi-box-val" id="kpi-hubs" style="color:#7c3aed;">15 Hubs</div>
+                </div>
+                <div class="kpi-box">
+                    <div class="kpi-box-lbl">Active Hub Stock</div>
+                    <div class="kpi-box-val" id="kpi-inventory" style="color:#0284c7;">-- kg</div>
+                </div>
+                <div class="kpi-box">
+                    <div class="kpi-box-lbl">AI Predicted Demand</div>
+                    <div class="kpi-box-val" id="kpi-demand" style="color:#059669;">-- kg</div>
+                </div>
+                <div class="kpi-box">
+                    <div class="kpi-box-lbl">Pending Deliveries</div>
+                    <div class="kpi-box-val" id="kpi-deliveries" style="color:#d97706;">--</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- MAIN INTERACTIVE SECTION -->
+    <main class="container">
+        <div class="logistics-container">
+            <!-- SIDEBAR CONTROLS & AI ALERTS -->
+            <aside class="sidebar-card">
+                <!-- 1. Filters Panel -->
+                <div>
+                    <h3 style="font-size:1.15rem;margin-bottom:0.75rem;display:flex;align-items:center;gap:0.5rem;">
+                        <span>🎯</span> Geospatial Filters
+                    </h3>
+                    
+                    <div class="form-group" style="margin-bottom:0.75rem;">
+                        <label class="form-label" for="filter-district" style="font-size:0.8rem;">District Focus</label>
+                        <select id="filter-district" class="form-control form-select" onchange="applyMapFilters()">
+                            <option value="">All Tamil Nadu (38 Districts)</option>
+                            <option value="Namakkal">Namakkal</option>
+                            <option value="Salem">Salem</option>
+                            <option value="Erode">Erode</option>
+                            <option value="Coimbatore">Coimbatore</option>
+                            <option value="Tiruppur">Tiruppur</option>
+                            <option value="Dindigul">Dindigul</option>
+                            <option value="Madurai">Madurai</option>
+                            <option value="Thanjavur">Thanjavur</option>
+                            <option value="Tiruchirappalli">Tiruchirappalli</option>
+                            <option value="Chennai">Chennai</option>
+                            <option value="Chengalpattu">Chengalpattu</option>
+                            <option value="Vellore">Vellore</option>
+                            <option value="Karur">Karur</option>
+                            <option value="Tirunelveli">Tirunelveli</option>
+                            <option value="Thoothukudi">Thoothukudi</option>
+                            <option value="The Nilgiris">The Nilgiris</option>
+                        </select>
+                    </div>
+
+                    <div style="display:flex;flex-direction:column;gap:0.4rem;font-size:0.82rem;">
+                        <label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer;">
+                            <input type="checkbox" id="layer-farmers" checked onchange="toggleMapLayer('farmers')">
+                            <span>🚜 Show Farmers (Harvest Locations)</span>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer;">
+                            <input type="checkbox" id="layer-hubs" checked onchange="toggleMapLayer('hubs')">
+                            <span>🏢 Show Regional Hubs (Collection Points)</span>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer;">
+                            <input type="checkbox" id="layer-deliveries" checked onchange="toggleMapLayer('deliveries')">
+                            <span>📦 Show Consumer Delivery Drops</span>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer;">
+                            <input type="checkbox" id="layer-routes" checked onchange="toggleMapLayer('routes')">
+                            <span>🛣️ Show OR-Tools Route Sequence</span>
+                        </label>
+                    </div>
+                </div>
+
+                <hr style="border:0;border-top:1px solid var(--slate-200);margin:0;">
+
+                <!-- 2. Route Optimization Controller -->
+                <div>
+                    <h3 style="font-size:1.1rem;margin-bottom:0.6rem;display:flex;align-items:center;gap:0.5rem;">
+                        <span>🛣️</span> Route Optimization (OR-Tools)
+                    </h3>
+                    <p style="font-size:0.8rem;color:var(--slate-500);margin-bottom:0.75rem;">
+                        Solves Capacitated Vehicle Routing Problem (CVRP) to minimize delivery distance & fuel costs.
+                    </p>
+
+                    <div class="form-group" style="margin-bottom:0.6rem;">
+                        <label class="form-label" for="opt-hub-select" style="font-size:0.78rem;">Select Dispatch Hub</label>
+                        <select id="opt-hub-select" class="form-control form-select" style="font-size:0.85rem;">
+                            <option value="101">Namakkal Agro-Logistics Center</option>
+                            <option value="100">Salem Collection & Processing Hub</option>
+                            <option value="102">Erode Central Turmeric & Veg Hub</option>
+                            <option value="104">Coimbatore Mega Agro-Hub</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom:0.75rem;">
+                        <label class="form-label" for="opt-vehicle-cap" style="font-size:0.78rem;">Vehicle Payload Capacity</label>
+                        <select id="opt-vehicle-cap" class="form-control form-select" style="font-size:0.85rem;">
+                            <option value="1000">Tata Ace EV (1,000 kg)</option>
+                            <option value="1500">Mahindra Bolero Maxi (1,500 kg)</option>
+                            <option value="2500">Ashok Leyland Dost (2,500 kg)</option>
+                        </select>
+                    </div>
+
+                    <button class="btn btn-primary btn-block btn-sm" id="btn-run-opt" onclick="triggerRouteOptimization()">
+                        ⚡ Optimize Stops & Draw Polyline
+                    </button>
+
+                    <div id="route-stats-container" style="margin-top:0.75rem;display:none;"></div>
+                </div>
+
+                <hr style="border:0;border-top:1px solid var(--slate-200);margin:0;">
+
+                <!-- 3. AI Shortage & Demand Intelligence Stream -->
+                <div>
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.6rem;">
+                        <h3 style="font-size:1.1rem;margin:0;display:flex;align-items:center;gap:0.4rem;">
+                            <span>🤖</span> AI Inventory Alerts
+                        </h3>
+                        <span style="font-size:0.7rem;background:#e0f2fe;color:#0369a1;padding:0.15rem 0.4rem;border-radius:4px;font-weight:700;">
+                            MODEL PREDICTIONS
+                        </span>
+                    </div>
+
+                    <div id="alerts-stream-container" style="max-height:280px;overflow-y:auto;">
+                        <div style="text-align:center;padding:1.5rem;color:var(--slate-400);font-size:0.85rem;">
+                            Loading AI alerts...
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- LEAFLET MAP VIEW -->
+            <div class="map-wrapper">
+                <div id="tamilnadu-map"></div>
+
+                <!-- Legend Overlay -->
+                <div class="map-legend">
+                    <div style="font-size:0.75rem;text-transform:uppercase;color:var(--slate-500);margin-bottom:0.4rem;letter-spacing:0.5px;">Map Layers</div>
+                    <div class="legend-item">
+                        <span class="legend-badge" style="background:#16a34a;"></span>
+                        <span>Farmer Harvest Locations</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-badge" style="background:#7c3aed;"></span>
+                        <span>Planned Regional Hubs</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-badge" style="background:#f59e0b;"></span>
+                        <span>Consumer Order Deliveries</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-badge" style="background:#0284c7;width:18px;height:4px;border-radius:2px;"></span>
+                        <span>OR-Tools Optimized Route</span>
+                    </div>
+                    <div style="margin-top:0.4rem;padding-top:0.35rem;border-top:1px solid #e2e8f0;font-size:0.7rem;color:var(--slate-400);">
+                        All facilities clearly designated as DEMO / PLANNED.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="/js/api.js"></script>
+    <script>
+        /**
+         * AgriSmart Connect - Tamil Nadu Interactive Logistics Controller
+         */
+        let map;
+        let farmersLayerGroup;
+        let hubsLayerGroup;
+        let deliveriesLayerGroup;
+        let routesLayerGroup;
+        let currentMapData = { hubs: [], farmers: [], deliveries: [] };
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            initLeafletMap();
+            await refreshLogisticsData();
+        });
+
+        function initLeafletMap() {
+            // Centered on Tamil Nadu (11.1271° N, 78.6569° E)
+            map = L.map('tamilnadu-map', {
+                center: [11.1271, 78.6569],
+                zoom: 7,
+                minZoom: 6,
+                maxZoom: 14
+            });
+
+            // OpenStreetMap free tile layer
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors | AgriSmart Connect'
+            }).addTo(map);
+
+            farmersLayerGroup = L.layerGroup().addTo(map);
+            hubsLayerGroup = L.layerGroup().addTo(map);
+            deliveriesLayerGroup = L.layerGroup().addTo(map);
+            routesLayerGroup = L.layerGroup().addTo(map);
+        }
+
+        async function refreshLogisticsData() {
+            try {
+                const dist = document.getElementById('filter-district')?.value || '';
+                const [dashRes, mapRes, alertsRes] = await Promise.all([
+                    apiFetch('/logistics/dashboard'),
+                    apiFetch(`/logistics/map-data${dist ? '?district=' + encodeURIComponent(dist) : ''}`),
+                    apiFetch('/logistics/inventory-alerts')
+                ]);
+
+                // Update KPIs
+                const ov = dashRes.overview || {};
+                document.getElementById('kpi-farmers').innerText = ov.total_farmers || '27';
+                document.getElementById('kpi-inventory').innerText = `${Number(ov.current_inventory_kg || 0).toLocaleString()} kg`;
+                document.getElementById('kpi-demand').innerText = `${Number(ov.predicted_demand_kg || 0).toLocaleString()} kg`;
+                document.getElementById('kpi-deliveries').innerText = ov.pending_deliveries || '14';
+
+                // Populate Hub selector
+                const hubSelect = document.getElementById('opt-hub-select');
+                if (hubSelect && mapRes.hubs && mapRes.hubs.length) {
+                    hubSelect.innerHTML = mapRes.hubs.map(h => 
+                        `<option value="${h.hub_id}">${h.hub_name} (${h.district})</option>`
+                    ).join('');
+                }
+
+                currentMapData = mapRes;
+                renderMapMarkers(mapRes);
+                renderAlertsStream(alertsRes.alerts || dashRes.alerts || []);
+
+                // If active route exists, render it
+                if (mapRes.active_route && mapRes.active_route.stops) {
+                    renderRoutePolyline(mapRes.active_route);
+                }
+
+            } catch (err) {
+                console.error('Failed to load logistics data:', err);
+                showToast('Logistics data load error: ' + err.message, 'error');
+            }
+        }
+
+        function renderMapMarkers(data) {
+            farmersLayerGroup.clearLayers();
+            hubsLayerGroup.clearLayers();
+            deliveriesLayerGroup.clearLayers();
+
+            // 1. Hub Markers (Purple Warehouse Icons)
+            const hubIcon = L.divIcon({
+                className: 'custom-hub-icon',
+                html: `<div style="background:#7c3aed;color:#fff;width:34px;height:34px;border-radius:8px;border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-size:1.1rem;box-shadow:0 3px 8px rgba(0,0,0,0.3);">🏢</div>`,
+                iconSize: [34, 34],
+                iconAnchor: [17, 17]
+            });
+
+            data.hubs.forEach(h => {
+                const marker = L.marker([h.latitude, h.longitude], { icon: hubIcon });
+                const capKg = Number(h.capacity_kg).toLocaleString();
+                const invKg = Number(h.current_inventory_kg).toLocaleString();
+                marker.bindPopup(`
+                    <div style="font-family:sans-serif;min-width:220px;">
+                        <span style="font-size:0.7rem;background:#ede9fe;color:#6b21a8;padding:0.15rem 0.4rem;border-radius:4px;font-weight:800;">PLANNED REGIONAL HUB</span>
+                        <h4 style="margin:0.35rem 0 0.2rem;color:#1e293b;font-size:1.05rem;">${h.hub_name}</h4>
+                        <div style="font-size:0.8rem;color:#64748b;margin-bottom:0.5rem;">📍 ${h.town || h.district}, Tamil Nadu</div>
+                        
+                        <div style="background:#f8fafc;padding:0.6rem;border-radius:6px;font-size:0.82rem;margin-bottom:0.6rem;">
+                            <div style="display:flex;justify-content:space-between;margin-bottom:0.25rem;">
+                                <span>Storage Capacity:</span> <strong>${capKg} kg</strong>
+                            </div>
+                            <div style="display:flex;justify-content:space-between;margin-bottom:0.25rem;">
+                                <span>Current Stock:</span> <strong style="color:#0369a1;">${invKg} kg</strong>
+                            </div>
+                            <div style="display:flex;justify-content:space-between;">
+                                <span>Delivery Radius:</span> <strong>${h.delivery_radius_km || 45} km</strong>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary btn-sm btn-block" onclick="selectHubForRouting(${h.hub_id})">
+                            Set as Routing Depot
+                        </button>
+                    </div>
+                `);
+                hubsLayerGroup.addLayer(marker);
+            });
+
+            // 2. Farmer Markers (Green Tractor/Sprout Icons)
+            const farmerIcon = L.divIcon({
+                className: 'custom-farmer-icon',
+                html: `<div style="background:#16a34a;color:#fff;width:30px;height:30px;border-radius:50%;border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-size:0.95rem;box-shadow:0 3px 8px rgba(0,0,0,0.3);">🌾</div>`,
+                iconSize: [30, 30],
+                iconAnchor: [15, 15]
+            });
+
+            data.farmers.forEach(f => {
+                const marker = L.marker([f.latitude, f.longitude], { icon: farmerIcon });
+                const availKg = Number(f.total_available_kg).toLocaleString();
+                marker.bindPopup(`
+                    <div style="font-family:sans-serif;min-width:210px;">
+                        <span style="font-size:0.7rem;background:#dcfce7;color:#15803d;padding:0.15rem 0.4rem;border-radius:4px;font-weight:800;">DEMO FARMER</span>
+                        <h4 style="margin:0.35rem 0 0.2rem;color:#1e293b;font-size:1rem;">${f.farm_name || f.farmer_name}</h4>
+                        <div style="font-size:0.8rem;color:#64748b;margin-bottom:0.5rem;">📍 ${f.village ? f.village + ', ' : ''}${f.district}</div>
+                        
+                        <div style="background:#f8fafc;padding:0.6rem;border-radius:6px;font-size:0.82rem;margin-bottom:0.5rem;">
+                            <div style="display:flex;justify-content:space-between;margin-bottom:0.2rem;">
+                                <span>Active Harvests:</span> <strong>${f.active_batches_count || 1}</strong>
+                            </div>
+                            <div style="display:flex;justify-content:space-between;margin-bottom:0.2rem;">
+                                <span>Available Produce:</span> <strong style="color:#16a34a;">${availKg} kg</strong>
+                            </div>
+                            <div style="display:flex;justify-content:space-between;">
+                                <span>Crops:</span> <strong>${f.crop_types || 'Tomato, Onion'}</strong>
+                            </div>
+                        </div>
+                    </div>
+                `);
+                farmersLayerGroup.addLayer(marker);
+            });
+
+            // 3. Delivery Stop Markers (Amber Pins)
+            const deliveryIcon = L.divIcon({
+                className: 'custom-delivery-icon',
+                html: `<div style="background:#f59e0b;color:#fff;width:26px;height:26px;border-radius:50%;border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-size:0.85rem;box-shadow:0 2px 6px rgba(0,0,0,0.25);">📦</div>`,
+                iconSize: [26, 26],
+                iconAnchor: [13, 13]
+            });
+
+            (data.deliveries || []).forEach(d => {
+                const marker = L.marker([d.delivery_latitude, d.delivery_longitude], { icon: deliveryIcon });
+                marker.bindPopup(`
+                    <div style="font-family:sans-serif;min-width:190px;">
+                        <span style="font-size:0.7rem;background:#fef3c7;color:#92400e;padding:0.15rem 0.4rem;border-radius:4px;font-weight:800;">DELIVERY ORDER</span>
+                        <h4 style="margin:0.35rem 0 0.2rem;font-size:0.95rem;">Order #${d.order_id}</h4>
+                        <div style="font-size:0.8rem;color:#64748b;margin-bottom:0.35rem;">Customer: <strong>${d.customer_name}</strong></div>
+                        <div style="font-size:0.78rem;color:#475569;">📍 ${d.delivery_address}</div>
+                    </div>
+                `);
+                deliveriesLayerGroup.addLayer(marker);
+            });
+        }
+
+        function renderAlertsStream(alerts) {
+            const container = document.getElementById('alerts-stream-container');
+            if (!container) return;
+
+            if (!alerts.length) {
+                container.innerHTML = `<div style="text-align:center;padding:1.5rem;color:var(--slate-400);font-size:0.85rem;">All regional hubs operating in optimal supply balance.</div>`;
+                return;
+            }
+
+            container.innerHTML = alerts.map(a => {
+                let cls = 'alert-optimal';
+                let icon = '✅';
+                if (a.status === 'SHORTAGE') {
+                    cls = 'alert-shortage';
+                    icon = '⚠️';
+                } else if (a.status === 'OVERSTOCK') {
+                    cls = 'alert-overstock';
+                    icon = '📦';
+                }
+
+                return `
+                    <div class="alert-card ${cls}">
+                        <div style="font-weight:700;display:flex;justify-content:space-between;align-items:center;margin-bottom:0.25rem;">
+                            <span>${icon} ${a.hub_name}</span>
+                            <span style="font-size:0.7rem;text-transform:uppercase;font-weight:800;">${a.status}</span>
+                        </div>
+                        <div style="margin-bottom:0.35rem;">${a.message}</div>
+                        <div style="font-size:0.75rem;opacity:0.85;border-top:1px dashed rgba(0,0,0,0.15);padding-top:0.25rem;">
+                            💡 <em>${a.action}</em>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function triggerRouteOptimization() {
+            const btn = document.getElementById('btn-run-opt');
+            const hubId = document.getElementById('opt-hub-select')?.value || 101;
+            const cap = document.getElementById('opt-vehicle-cap')?.value || 1200;
+
+            if (btn) btn.innerHTML = '⚙️ Running OR-Tools VRP Solver...';
+
+            try {
+                const res = await apiFetch('/logistics/optimize-route', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        hub_id: parseInt(hubId),
+                        vehicle_capacity_kg: parseFloat(cap)
+                    })
+                });
+
+                if (res.status === 'success' && res.route) {
+                    showToast(`Route optimized! ${res.route.total_distance_km} km across ${res.route.delivery_count} stops.`, 'success');
+                    renderRoutePolyline({
+                        meta: res.route,
+                        stops: res.route.stops
+                    });
+                    renderRouteStats(res.route);
+                } else {
+                    showToast('Could not optimize route: ' + (res.message || 'No orders'), 'error');
+                }
+            } catch (err) {
+                showToast('Optimization error: ' + err.message, 'error');
+            } finally {
+                if (btn) btn.innerHTML = '⚡ Optimize Stops & Draw Polyline';
+            }
+        }
+
+        function renderRoutePolyline(routeData) {
+            routesLayerGroup.clearLayers();
+            const stops = routeData.stops || [];
+            if (!stops.length) return;
+
+            const latlngs = stops.map(s => [s.latitude, s.longitude]);
+            // Close loop back to depot
+            latlngs.push(latlngs[0]);
+
+            const polyline = L.polyline(latlngs, {
+                color: '#0284c7',
+                weight: 4,
+                opacity: 0.85,
+                dashArray: '8, 8',
+                lineJoin: 'round'
+            }).addTo(routesLayerGroup);
+
+            // Add numbered sequence markers along route
+            stops.forEach(s => {
+                if (s.sequence > 0) {
+                    const numIcon = L.divIcon({
+                        className: 'stop-num-icon',
+                        html: `<div style="background:#0f172a;color:#fff;width:22px;height:22px;border-radius:50%;border:2px solid #38bdf8;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:800;">${s.sequence}</div>`,
+                        iconSize: [22, 22],
+                        iconAnchor: [11, 11]
+                    });
+                    const m = L.marker([s.latitude, s.longitude], { icon: numIcon });
+                    m.bindPopup(`<strong>Stop ${s.sequence}</strong><br>${s.customer_name || 'Customer'}<br>${s.address}`);
+                    routesLayerGroup.addLayer(m);
+                }
+            });
+
+            map.fitBounds(polyline.getBounds(), { padding: [40, 40] });
+        }
+
+        function renderRouteStats(r) {
+            const container = document.getElementById('route-stats-container');
+            if (!container) return;
+
+            container.style.display = 'block';
+            container.innerHTML = `
+                <div class="route-info-box">
+                    <div style="font-weight:800;color:#065f46;margin-bottom:0.4rem;display:flex;justify-content:space-between;">
+                        <span>OR-Tools Route Active</span>
+                        <span>${r.algorithm || 'VRP Solver'}</span>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.4rem;font-size:0.8rem;">
+                        <div>Distance: <strong>${r.total_distance_km} km</strong></div>
+                        <div>Est. Time: <strong>${r.estimated_time_minutes} mins</strong></div>
+                        <div>Total Weight: <strong>${r.total_weight_kg} kg</strong></div>
+                        <div>Capacity Used: <strong>${r.capacity_used_percent}%</strong></div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function selectHubForRouting(hubId) {
+            const sel = document.getElementById('opt-hub-select');
+            if (sel) {
+                sel.value = hubId;
+                showToast(`Selected hub for dispatch. Click "Optimize Stops" to calculate route.`, 'info');
+            }
+        }
+
+        function applyMapFilters() {
+            refreshLogisticsData();
+        }
+
+        function toggleMapLayer(layerName) {
+            const chk = document.getElementById(`layer-${layerName}`);
+            if (!chk) return;
+            const isChecked = chk.checked;
+
+            if (layerName === 'farmers') {
+                if (isChecked) map.addLayer(farmersLayerGroup); else map.removeLayer(farmersLayerGroup);
+            } else if (layerName === 'hubs') {
+                if (isChecked) map.addLayer(hubsLayerGroup); else map.removeLayer(hubsLayerGroup);
+            } else if (layerName === 'deliveries') {
+                if (isChecked) map.addLayer(deliveriesLayerGroup); else map.removeLayer(deliveriesLayerGroup);
+            } else if (layerName === 'routes') {
+                if (isChecked) map.addLayer(routesLayerGroup); else map.removeLayer(routesLayerGroup);
+            }
+        }
+    </script>
+    <script src="/js/voice-guidance.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.AgriVoice) window.AgriVoice.attachPageHeaderVoice('logistics');
+        });
+    </script>
+</body>
+</html>

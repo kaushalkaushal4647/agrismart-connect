@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>B2B Bulk Demand & Matching Portal - AgriSmart Connect</title>
+    <meta name="description" content="Commercial restaurant and retailer portal for bulk and recurring agricultural produce matching with regional collection hubs.">
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .portal-header {
+            background: linear-gradient(135deg, rgba(254, 243, 199, 0.7), rgba(248, 250, 252, 1));
+            border-bottom: 1px solid var(--slate-200);
+            padding: 2.25rem 0;
+            margin-bottom: 2rem;
+        }
+        .b2b-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 2rem;
+            align-items: flex-start;
+        }
+        .match-results-card {
+            background: var(--white);
+            border: 1px solid var(--slate-200);
+            border-radius: var(--radius-lg);
+            padding: 1.75rem;
+            box-shadow: var(--shadow-sm);
+        }
+        .score-circle {
+            width: 58px;
+            height: 58px;
+            border-radius: 50%;
+            background: var(--primary-50);
+            color: var(--primary-dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
+            font-size: 1.15rem;
+            border: 2px solid var(--primary);
+        }
+        .allocation-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.25rem 0;
+        }
+        .allocation-table th {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: var(--slate-500);
+            border-bottom: 1px solid var(--slate-200);
+            padding: 0.6rem 0.5rem;
+            text-align: left;
+        }
+        .allocation-table td {
+            padding: 0.75rem 0.5rem;
+            border-bottom: 1px solid var(--slate-100);
+            font-size: 0.88rem;
+        }
+        @media (max-width: 900px) {
+            .b2b-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <header class="navbar">
+        <div class="container nav-container">
+            <a href="/index.html" class="brand-logo">
+                <div class="logo-icon">🌱</div>
+                <span>AgriSmart<span style="color:var(--primary-light);">Connect</span></span>
+                <span class="brand-badge" style="background:#fef3c7;color:#92400e;">B2B Port</span>
+            </a>
+
+            <ul class="nav-links">
+                <li><a href="/index.html" class="nav-link">Home</a></li>
+                <li><a href="/marketplace.html" class="nav-link">Marketplace</a></li>
+                <li><a href="/restaurant.html" class="nav-link active">Bulk Demand</a></li>
+                <li><a href="/orders.html" class="nav-link">Orders</a></li>
+            </ul>
+
+            <div class="nav-actions" id="nav-auth-actions">
+                <!-- Populated by api.js -->
+            </div>
+        </div>
+    </header>
+
+    <!-- HEADER -->
+    <section class="portal-header">
+        <div class="container">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;">
+                <div>
+                    <span class="section-badge" style="color:var(--accent-amber);">Commercial B2B Sourcing</span>
+                    <h1 style="font-size:2.2rem;margin-bottom:0.25rem;">Bulk Produce Requirement & Matching</h1>
+                    <p style="color:var(--slate-600);font-size:1rem;">
+                        Lock in bulk weekly requirements (e.g. 100 kg Tomato). Our dynamic engine pairs multiple local farmers to fulfill your exact volume.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- MAIN B2B INTERFACE -->
+    <main class="container" style="padding-bottom: 4rem;">
+        <div class="b2b-grid">
+            <!-- 1. Demand Form -->
+            <div class="auth-card" style="width:100%;max-width:none;box-shadow:var(--shadow-sm);border:1px solid var(--slate-200);padding:2rem;">
+                <h3 style="font-size:1.35rem;margin-bottom:0.4rem;">Post Bulk Requirement</h3>
+                <p style="font-size:0.88rem;color:var(--slate-500);margin-bottom:1.5rem;">Enter volume and target delivery date to run the matching engine</p>
+
+                <form id="bulk-demand-form">
+                    <div class="form-group">
+                        <label class="form-label" for="bulk-crop">Produce Crop *</label>
+                        <select id="bulk-crop" class="form-control form-select" required>
+                            <option value="">Loading crops...</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="bulk-variety">Specific Variety (Optional)</label>
+                        <select id="bulk-variety" class="form-control form-select">
+                            <option value="">Any Variety (Best Match)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label" for="bulk-qty">Required Volume (kg) *</label>
+                            <input type="number" id="bulk-qty" class="form-control" placeholder="e.g. 100" min="10" step="5" required value="100">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="bulk-date">Required Delivery Date *</label>
+                            <input type="date" id="bulk-date" class="form-control" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label" for="bulk-max-price">Target Max Price (₹/kg)</label>
+                            <input type="number" id="bulk-max-price" class="form-control" placeholder="Optional ceiling" min="1" step="0.5">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="bulk-recurring">Fulfillment Schedule</label>
+                            <select id="bulk-recurring" class="form-control form-select">
+                                <option value="portal">One-Time Bulk Order</option>
+                                <option value="recurring">Weekly Recurring Contract</option>
+                                <option value="b2b_contract">Bi-Weekly Standing Commitment</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="bulk-delivery-address">Delivery Address *</label>
+                        <textarea id="bulk-delivery-address" class="form-control" rows="2" placeholder="Restaurant / Store address" required></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-block btn-lg" style="margin-top:1rem;">
+                        ⚡ Run Dynamic Matching Engine
+                    </button>
+                </form>
+            </div>
+
+            <!-- 2. Match Preview Container -->
+            <div class="match-results-card" id="match-results-container">
+                <div style="text-align:center;padding:3rem 1rem;color:var(--slate-400);">
+                    <div style="font-size:2.5rem;margin-bottom:1rem;">⚡</div>
+                    <h3 style="font-size:1.25rem;color:var(--slate-700);margin-bottom:0.5rem;">Awaiting Requirement</h3>
+                    <p style="font-size:0.9rem;max-width:360px;margin:0 auto;">
+                        Fill out the bulk requirement form on the left and click <strong>Run Dynamic Matching Engine</strong> to preview farmer allocations.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="container footer-content">
+            <div style="display:flex;align-items:center;gap:0.75rem;">
+                <div class="logo-icon" style="width:28px;height:28px;font-size:0.9rem;">🌱</div>
+                <span style="font-weight:700;color:var(--slate-800);">AgriSmart Connect</span>
+                <span>© 2026</span>
+            </div>
+            <ul class="footer-links">
+                <li><a href="/index.html">Home</a></li>
+                <li><a href="/marketplace.html">Marketplace</a></li>
+                <li><a href="/orders.html">Orders</a></li>
+            </ul>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="/js/i18n.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/orders.js"></script>
+    <!-- Razorpay Checkout SDK & Payment Controller -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script src="/js/payment.js"></script>
+    <script>
+        let currentMatchPlan = null;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Set default date to 3 days ahead
+            const dateInput = document.getElementById('bulk-date');
+            const targetDate = new Date();
+            targetDate.setDate(targetDate.getDate() + 3);
+            dateInput.value = targetDate.toISOString().split('T')[0];
+
+            // Prefill address if logged in
+            const user = getCurrentUser();
+            if (user && user.profile && user.profile.address) {
+                document.getElementById('bulk-delivery-address').value = user.profile.address;
+            }
+
+            // Load crops
+            try {
+                const cropsRes = await apiFetch('/crops');
+                const select = document.getElementById('bulk-crop');
+                select.innerHTML = '<option value="">-- Select Produce --</option>';
+                cropsRes.crops.forEach(c => {
+                    select.innerHTML += `<option value="${c.crop_id}">${c.crop_name}</option>`;
+                });
+
+                select.addEventListener('change', async () => {
+                    const varSelect = document.getElementById('bulk-variety');
+                    varSelect.innerHTML = '<option value="">Any Variety (Best Match)</option>';
+                    if (!select.value) return;
+                    const varsRes = await apiFetch(`/crops/${select.value}/varieties`);
+                    varsRes.varieties.forEach(v => {
+                        varSelect.innerHTML += `<option value="${v.variety_id}">${v.variety_name}</option>`;
+                    });
+                });
+            } catch (err) {
+                console.error('Failed to load crops:', err);
+            }
+
+            // Handle matching submit
+            document.getElementById('bulk-demand-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await runMatching();
+            });
+        });
+
+        async function runMatching() {
+            const container = document.getElementById('match-results-container');
+            container.innerHTML = '<div style="text-align:center;padding:3rem;color:var(--slate-500);">Computing optimal farmer allocations with proximity & harvest scoring...</div>';
+
+            const crop_id = document.getElementById('bulk-crop').value;
+            const variety_id = document.getElementById('bulk-variety').value || null;
+            const required_quantity_kg = document.getElementById('bulk-qty').value;
+            const required_date = document.getElementById('bulk-date').value;
+            const max_price_per_kg = document.getElementById('bulk-max-price').value || null;
+
+            try {
+                const res = await apiFetch('/matching/find', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        crop_id,
+                        variety_id,
+                        required_quantity_kg,
+                        required_date,
+                        max_price_per_kg
+                    })
+                });
+
+                currentMatchPlan = res.matching_result;
+                renderMatchResults(currentMatchPlan);
+
+            } catch (err) {
+                container.innerHTML = `<div style="color:var(--status-danger);padding:2rem;text-align:center;">Matching failed: ${err.message}</div>`;
+            }
+        }
+
+        function renderMatchResults(plan) {
+            const container = document.getElementById('match-results-container');
+            if (!plan.match_found) {
+                container.innerHTML = `
+                    <div style="text-align:center;padding:2rem;">
+                        <div style="font-size:2rem;margin-bottom:0.5rem;">⚠️</div>
+                        <h4>No Suitable Farmer Matches Found</h4>
+                        <p style="color:var(--slate-500);font-size:0.9rem;margin-top:0.5rem;">
+                            Shortfall: <strong>${plan.shortfall_quantity_kg} kg</strong>. Try adjusting target delivery date or ceiling price.
+                        </p>
+                    </div>
+                `;
+                return;
+            }
+
+            const batches = plan.allocated_batches;
+            const avgScore = (batches.reduce((acc, b) => acc + b.match_score, 0) / batches.length).toFixed(1);
+
+            container.innerHTML = `
+                <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--slate-100);padding-bottom:1rem;margin-bottom:1rem;">
+                    <div>
+                        <span class="brand-badge" style="background:#dcfce7;color:#166534;margin-left:0;">OPTIMAL MATCH FOUND</span>
+                        <h3 style="font-size:1.35rem;margin-top:0.3rem;">Fulfillment Plan (${batches.length} Farm${batches.length === 1 ? '' : 's'})</h3>
+                        <div style="font-size:0.85rem;color:var(--slate-500);">Total Volume: <strong>${plan.allocated_quantity_kg} kg</strong> / ${plan.required_quantity_kg} kg required</div>
+                    </div>
+                    <div class="score-circle">
+                        ${avgScore}%
+                    </div>
+                </div>
+
+                <table class="allocation-table">
+                    <thead>
+                        <tr>
+                            <th>Farm / Producer</th>
+                            <th>Allocated</th>
+                            <th>Rate</th>
+                            <th>Harvest</th>
+                            <th>Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${batches.map(b => `
+                            <tr>
+                                <td>
+                                    <strong>${b.farm_name}</strong>
+                                    <div style="font-size:0.75rem;color:var(--slate-500);">${b.crop_name} (${b.variety_name || 'Std'})</div>
+                                </td>
+                                <td><strong style="color:var(--primary-dark);">${b.allocated_quantity_kg} kg</strong></td>
+                                <td>₹${b.price_per_kg}</td>
+                                <td>${new Date(b.harvest_date).toLocaleDateString('en-IN', { day:'numeric', month:'short' })}</td>
+                                <td><strong>₹${b.line_total}</strong></td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+
+                <div style="background:var(--slate-50);border-radius:var(--radius-md);padding:1rem 1.25rem;margin:1.25rem 0;font-size:0.88rem;">
+                    <div style="display:flex;justify-content:space-between;margin-bottom:0.4rem;">
+                        <span>Produce Subtotal:</span>
+                        <strong>₹${plan.subtotal.toFixed(2)}</strong>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;margin-bottom:0.4rem;">
+                        <span>Hub Logistics & Delivery:</span>
+                        <strong>₹${plan.estimated_delivery_fee.toFixed(2)}</strong>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;margin-bottom:0.4rem;">
+                        <span>Platform Fee (5%):</span>
+                        <strong>₹${plan.platform_fee.toFixed(2)}</strong>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;border-top:1px solid var(--slate-200);padding-top:0.5rem;font-size:1.05rem;color:var(--slate-900);">
+                        <strong>Total Amount Payable:</strong>
+                        <strong style="color:var(--primary-dark);">₹${plan.total_amount.toFixed(2)}</strong>
+                    </div>
+                </div>
+
+                <!-- Payment Selection -->
+                <div style="margin-bottom:1.25rem;">
+                    <label style="font-size:0.82rem;font-weight:700;color:var(--slate-700);display:block;margin-bottom:0.5rem;cursor:pointer;" data-voice-module="payment" title="Click to hear payment explanation">Select Payment & Escrow Method: <span class="agv-speaker-icon" style="font-size:0.85rem;">🔈</span></label>
+                    <div style="display:grid;grid-template-columns:1fr;gap:0.6rem;">
+                        <label style="display:flex;align-items:center;gap:0.6rem;padding:0.75rem 1rem;border:1.5px solid var(--primary);background:#f0fdf4;border-radius:var(--radius-md);cursor:pointer;font-size:0.88rem;font-weight:600;">
+                            <input type="radio" name="restaurant-payment-method" value="razorpay" checked>
+                            <span>💳 Razorpay Gateway (UPI, Corporate Cards & Net Banking)</span>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:0.6rem;padding:0.75rem 1rem;border:1px solid var(--slate-200);background:var(--white);border-radius:var(--radius-md);cursor:pointer;font-size:0.88rem;font-weight:600;">
+                            <input type="radio" name="restaurant-payment-method" value="trade_credit">
+                            <span>🏦 B2B Trade Credit Terms (Escrow Settlement on Hub QA)</span>
+                        </label>
+                    </div>
+                </div>
+
+                <button id="btn-confirm-bulk" class="btn btn-primary btn-block btn-lg" onclick="confirmBulkOrder()">
+                    💳 Proceed to Payment & Lock Allocation
+                </button>
+            `;
+        }
+
+        async function confirmBulkOrder() {
+            if (!currentMatchPlan || !currentMatchPlan.allocated_batches.length) return;
+
+            const user = getCurrentUser();
+            if (!user) {
+                showToast('Please sign in to confirm this order.', 'info');
+                setTimeout(() => window.location.href = '/login.html', 1200);
+                return;
+            }
+
+            const address = document.getElementById('bulk-delivery-address').value.trim();
+            if (!address) {
+                showToast('Please provide a delivery address.', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('btn-confirm-bulk');
+            const selectedMethod = document.querySelector('input[name="restaurant-payment-method"]:checked')?.value || 'razorpay';
+
+            const payload = {
+                delivery_address: address,
+                delivery_fee: currentMatchPlan.estimated_delivery_fee,
+                hub_id: currentMatchPlan.allocated_batches[0].preferred_hub_id || null,
+                items: currentMatchPlan.allocated_batches.map(b => ({
+                    produce_id: b.produce_id,
+                    quantity_kg: b.allocated_quantity_kg,
+                    price_per_kg: b.price_per_kg
+                }))
+            };
+
+            if (selectedMethod === 'razorpay') {
+                if (typeof checkoutAndPay !== 'function') {
+                    showToast('Payment system loading, please retry in a moment.', 'error');
+                    return;
+                }
+
+                await checkoutAndPay(payload, {
+                    buttonEl: btn,
+                    customerName: user.name || '',
+                    customerEmail: user.email || '',
+                    customerPhone: user.phone || '',
+                    onSuccess: ({ order_id, payment_id }) => {
+                        showToast(`Payment successful! Order #${order_id} confirmed.`, 'success');
+                        setTimeout(() => window.location.href = '/orders.html', 1500);
+                    },
+                    onFailure: ({ error }) => {
+                        showToast(`Payment failed: ${error}`, 'error');
+                    }
+                });
+            } else {
+                try {
+                    if (btn) {
+                        btn.disabled = true;
+                        btn.textContent = 'Locking Contract...';
+                    }
+                    const res = await apiFetch('/orders', {
+                        method: 'POST',
+                        body: JSON.stringify(payload)
+                    });
+
+                    showToast('Bulk order confirmed under B2B Trade Credit terms!', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/orders.html';
+                    }, 1200);
+
+                } catch (err) {
+                    showToast(err.message || 'Failed to lock in order.', 'error');
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.textContent = '💳 Proceed to Payment & Lock Allocation';
+                    }
+                }
+            }
+        }
+    </script>
+    <script src="/js/voice-guidance.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.AgriVoice) window.AgriVoice.attachPageHeaderVoice('restaurant');
+        });
+    </script>
+</body>
+</html>

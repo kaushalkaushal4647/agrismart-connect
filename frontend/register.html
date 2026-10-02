@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account - AgriSmart Connect</title>
+    <meta name="description" content="Register for AgriSmart Connect as a farmer, consumer, restaurant, retailer, delivery partner, or hub operator.">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <header class="navbar">
+        <div class="container nav-container">
+            <a href="/index.html" class="brand-logo">
+                <div class="logo-icon">🌱</div>
+                <span>AgriSmart<span style="color:var(--primary-light);">Connect</span></span>
+            </a>
+
+            <div class="nav-actions">
+                <span style="font-size:0.9rem;color:var(--slate-500);">Already registered?</span>
+                <a href="/login.html" class="btn btn-outline btn-sm">Sign In</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- REGISTER SECTION -->
+    <div class="auth-wrapper">
+        <div class="auth-card auth-card-wide">
+            <div class="auth-header">
+                <h2>Join AgriSmart Connect</h2>
+                <p>Select your role and start participating in the demand-matched ecosystem</p>
+            </div>
+
+            <form id="register-form">
+                <!-- 1. Role Selection -->
+                <div class="form-group">
+                    <label class="form-label">Select Your Role</label>
+                    <div class="role-picker">
+                        <div>
+                            <input type="radio" name="role" id="role-farmer" value="farmer" class="role-radio-input" checked>
+                            <label for="role-farmer" class="role-radio-label">
+                                <span style="font-size:1.5rem;">🧑‍🌾</span>
+                                <span>Farmer</span>
+                            </label>
+                        </div>
+                        <div>
+                            <input type="radio" name="role" id="role-consumer" value="consumer" class="role-radio-input">
+                            <label for="role-consumer" class="role-radio-label">
+                                <span style="font-size:1.5rem;">🥗</span>
+                                <span>Consumer</span>
+                            </label>
+                        </div>
+                        <div>
+                            <input type="radio" name="role" id="role-restaurant" value="restaurant" class="role-radio-input">
+                            <label for="role-restaurant" class="role-radio-label">
+                                <span style="font-size:1.5rem;">🍽️</span>
+                                <span>Restaurant</span>
+                            </label>
+                        </div>
+                        <div>
+                            <input type="radio" name="role" id="role-retailer" value="retailer" class="role-radio-input">
+                            <label for="role-retailer" class="role-radio-label">
+                                <span style="font-size:1.5rem;">🏪</span>
+                                <span>Retailer</span>
+                            </label>
+                        </div>
+                        <div>
+                            <input type="radio" name="role" id="role-hub" value="hub_operator" class="role-radio-input">
+                            <label for="role-hub" class="role-radio-label">
+                                <span style="font-size:1.5rem;">🏬</span>
+                                <span>Hub Operator</span>
+                            </label>
+                        </div>
+                        <div>
+                            <input type="radio" name="role" id="role-delivery" value="delivery_partner" class="role-radio-input">
+                            <label for="role-delivery" class="role-radio-label">
+                                <span style="font-size:1.5rem;">🚚</span>
+                                <span>Delivery</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Common Credentials -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="reg-name">Full Name / Contact Person *</label>
+                        <input type="text" id="reg-name" class="form-control" placeholder="e.g. Rajesh Kumar" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="reg-phone">Phone Number *</label>
+                        <input type="tel" id="reg-phone" class="form-control" placeholder="e.g. 9876543210" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="reg-email">Email Address *</label>
+                        <input type="email" id="reg-email" class="form-control" placeholder="e.g. rajesh@agri.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="reg-password">Password (min 6 characters) *</label>
+                        <input type="password" id="reg-password" class="form-control" placeholder="••••••••" minlength="6" required>
+                    </div>
+                </div>
+
+                <!-- 3. Farmer-Specific Profile Fields -->
+                <div id="farmer-specific-fields">
+                    <div style="border-top:1px solid var(--slate-200);margin:1.25rem 0;padding-top:1rem;">
+                        <h4 style="font-size:1.05rem;color:var(--primary-dark);margin-bottom:0.75rem;">🌾 Farm Details</h4>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label" for="reg-farm-name">Farm / Enterprise Name</label>
+                            <input type="text" id="reg-farm-name" class="form-control" placeholder="e.g. Green Valley Farms">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="reg-farm-size">Farm Size (in Acres)</label>
+                            <input type="number" id="reg-farm-size" class="form-control" step="0.1" min="0" placeholder="e.g. 5.5">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label" for="reg-village">Village / Town</label>
+                            <input type="text" id="reg-village" class="form-control" placeholder="e.g. Mohanur">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="reg-district">District</label>
+                            <input type="text" id="reg-district" class="form-control" placeholder="e.g. Namakkal">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="reg-state">State</label>
+                        <input type="text" id="reg-state" class="form-control" placeholder="e.g. Tamil Nadu">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="reg-address">Full Farm Address</label>
+                        <textarea id="reg-address" class="form-control" rows="2" placeholder="Survey No. / Landmark"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.4rem;">
+                            <label class="form-label" style="margin-bottom:0;">Farm GPS Coordinates (for Proximity Matching)</label>
+                            <button type="button" class="btn btn-outline btn-sm" id="btn-detect-location">Detect My Location 📍</button>
+                        </div>
+                        <div class="form-row">
+                            <input type="number" id="reg-latitude" class="form-control" step="0.000001" placeholder="Latitude (e.g. 11.2189)">
+                            <input type="number" id="reg-longitude" class="form-control" step="0.000001" placeholder="Longitude (e.g. 78.1674)">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. Buyer-Specific Profile Fields -->
+                <div id="buyer-specific-fields" style="display:none;">
+                    <div style="border-top:1px solid var(--slate-200);margin:1.25rem 0;padding-top:1rem;">
+                        <h4 style="font-size:1.05rem;color:var(--accent-amber);margin-bottom:0.75rem;">🏢 Business / Delivery Details</h4>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="reg-business-name">Business / Store Name</label>
+                        <input type="text" id="reg-business-name" class="form-control" placeholder="e.g. Green Fresh Supermarket or Spicy Bistro">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label" for="reg-buyer-village">Locality / Area</label>
+                            <input type="text" id="reg-buyer-village" class="form-control" placeholder="e.g. Suramangalam">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="reg-buyer-district">City / District</label>
+                            <input type="text" id="reg-buyer-district" class="form-control" placeholder="e.g. Salem">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="reg-buyer-address">Delivery / Business Address</label>
+                        <textarea id="reg-buyer-address" class="form-control" rows="2" placeholder="Street, landmark, pin code"></textarea>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block btn-lg" style="margin-top:1.5rem;">
+                    Complete Registration
+                </button>
+            </form>
+
+            <div style="text-align:center;margin-top:1.5rem;font-size:0.9rem;color:var(--slate-500);">
+                Already have an account? <a href="/login.html" style="font-weight:600;">Sign in here</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/js/i18n.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/auth.js"></script>
+</body>
+</html>

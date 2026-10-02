@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consumer Fresh Hub - AgriSmart Connect</title>
+    <meta name="description" content="Direct farm-to-table fresh agricultural produce. Buy harvest-fresh vegetables and fruits with full traceability.">
+    <link rel="stylesheet" href="/css/style.css">
+    <!-- Razorpay Checkout SDK (Test Mode) -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <style>
+        .consumer-header {
+            background: linear-gradient(135deg, rgba(240, 253, 244, 0.9), rgba(220, 252, 231, 0.6));
+            border-bottom: 1px solid var(--slate-200);
+            padding: 2.25rem 0;
+            margin-bottom: 2rem;
+        }
+
+        .consumer-grid {
+            display: grid;
+            grid-template-columns: 1.3fr 0.9fr;
+            gap: 2rem;
+            align-items: flex-start;
+        }
+
+        .product-card-consumer {
+            background: var(--white);
+            border: 1px solid var(--slate-200);
+            border-radius: var(--radius-lg);
+            padding: 1.25rem;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            gap: 1.25rem;
+            align-items: center;
+            transition: var(--transition-fast);
+        }
+
+        .product-card-consumer:hover {
+            box-shadow: var(--shadow-md);
+            border-color: var(--primary-light);
+            transform: translateY(-2px);
+        }
+
+        .produce-thumb {
+            width: 72px;
+            height: 72px;
+            border-radius: var(--radius-md);
+            background: var(--primary-50);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.2rem;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+        .produce-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: var(--radius-md);
+        }
+
+        .produce-info {
+            flex: 1;
+        }
+
+        .traceability-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            background: var(--slate-100);
+            color: var(--slate-700);
+            font-size: 0.75rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: var(--radius-full);
+            font-weight: 500;
+        }
+
+        .quick-cart-box {
+            background: var(--white);
+            border: 1px solid var(--slate-200);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-sm);
+            position: sticky;
+            top: 90px;
+        }
+
+        .order-step-mini {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.65rem 0;
+            border-bottom: 1px solid var(--slate-100);
+        }
+
+        @media (max-width: 900px) {
+            .consumer-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <header class="navbar">
+        <div class="container nav-container">
+            <a href="/index.html" class="brand-logo">
+                <div class="logo-icon">🌱</div>
+                <span>AgriSmart<span style="color:var(--primary-light);">Connect</span></span>
+                <span class="brand-badge" style="background:#dcfce7;color:#15803d;">Consumer</span>
+            </a>
+
+            <ul class="nav-links">
+                <li><a href="/index.html" class="nav-link">Home</a></li>
+                <li><a href="/consumer.html" class="nav-link active">Fresh Produce</a></li>
+                <li><a href="/marketplace.html" class="nav-link">Marketplace</a></li>
+                <li><a href="/orders.html" class="nav-link">My Orders</a></li>
+            </ul>
+
+            <div class="nav-actions" id="nav-auth-actions">
+                <a href="/login.html" class="btn btn-outline btn-sm">Sign In</a>
+                <a href="/register.html" class="btn btn-primary btn-sm">Join</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- HEADER / HERO -->
+    <section class="consumer-header">
+        <div class="container">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+                <div>
+                    <span class="badge badge-success">Direct Farm to Doorstep</span>
+                    <h1 style="font-size:2rem; font-weight:800; color:var(--slate-900); margin:0.35rem 0;">
+                        Fresh Harvest Consumer Portal
+                    </h1>
+                    <p style="color:var(--slate-600); max-width:650px; font-size:0.95rem; margin:0;">
+                        Order produce harvested directly for your table. Eliminate middlemen markups and enjoy 100% verified farm origin with regional hub quality checks.
+                    </p>
+                </div>
+                <div>
+                    <a href="/orders.html" class="btn btn-primary btn-sm">
+                        📦 Track Active Deliveries
+                    </a>
+                </div>
+            </div>
+
+            <!-- Highlights bar -->
+            <div style="display:flex; gap:1.5rem; margin-top:1.25rem; flex-wrap:wrap;">
+                <span class="traceability-pill">🌱 Harvest-on-Demand (Zero Cold-Storage Waste)</span>
+                <span class="traceability-pill">📍 Full GPS Farmer Traceability</span>
+                <span class="traceability-pill">✅ Certified Hub Quality Grading (Grade A)</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- MAIN CONTENT -->
+    <main class="container mb-5">
+        <div class="consumer-grid">
+
+            <!-- LEFT COLUMN: FRESH PRODUCE LISTINGS -->
+            <div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem;">
+                    <div>
+                        <h2 style="font-size:1.25rem; margin:0; font-weight:700;">Available Farm Harvests</h2>
+                        <span style="font-size:0.85rem; color:var(--slate-500);">Directly from verified regional farmers</span>
+                    </div>
+                    <div>
+                        <select id="crop-category-filter" class="form-control" style="font-size:0.85rem; padding:0.4rem 0.75rem;" onchange="filterProduce()">
+                            <option value="">All Crop Types</option>
+                            <option value="Tomato">Tomato</option>
+                            <option value="Potato">Potato</option>
+                            <option value="Onion">Onion</option>
+                            <option value="Carrot">Carrot</option>
+                            <option value="Spinach">Spinach</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Produce List Container -->
+                <div id="produce-container" style="display:flex; flex-direction:column; gap:1rem;">
+                    <div style="text-align:center; padding:2.5rem; color:var(--slate-400);">
+                        Loading harvest-fresh produce...
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT COLUMN: FRESH BASKET & TRACEABILITY -->
+            <div>
+                <!-- Basket & Order Modal Trigger -->
+                <div class="quick-cart-box">
+                    <h3 style="margin:0 0 0.5rem 0; font-size:1.15rem; font-weight:700; cursor:pointer;" data-voice-module="payment" title="Click to hear payment explanation">Direct Fresh Order <span class="agv-speaker-icon" style="font-size:0.9rem;">🔈</span></h3>
+                    <p style="font-size:0.85rem; color:var(--slate-500); margin-bottom:1.25rem;">
+                        Select fresh produce on the left to lock in your harvest batch.
+                    </p>
+
+                    <div id="selected-produce-preview" style="background:var(--slate-50); border:1px dashed var(--slate-300); border-radius:var(--radius-md); padding:1rem; text-align:center; color:var(--slate-500); margin-bottom:1.25rem; font-size:0.875rem;">
+                        No produce selected yet. Click "Quick Order" on any farm listing.
+                    </div>
+
+                    <!-- Order Form -->
+                    <form id="consumer-order-form" onsubmit="submitConsumerOrder(event)" style="display:none;">
+                        <input type="hidden" id="order-produce-id">
+                        <input type="hidden" id="order-price-per-kg">
+
+                        <div class="form-group" style="margin-bottom:0.75rem;">
+                            <label style="font-size:0.85rem; font-weight:600; color:var(--slate-700);">Quantity (kg):</label>
+                            <input type="number" id="order-kg" class="form-control" min="1" max="100" value="5" step="0.5" required oninput="calculateSubtotal()">
+                        </div>
+
+                        <div class="form-group" style="margin-bottom:0.75rem;">
+                            <label style="font-size:0.85rem; font-weight:600; color:var(--slate-700);">Delivery Address:</label>
+                            <input type="text" id="order-address" class="form-control" placeholder="House/Apt No., Street, Locality" required>
+                        </div>
+
+                        <!-- Price calculation -->
+                        <div style="background:var(--slate-100); border-radius:var(--radius-md); padding:0.85rem; margin-bottom:1rem; font-size:0.875rem;">
+                            <div style="display:flex; justify-content:space-between; margin-bottom:0.35rem;">
+                                <span>Produce Subtotal:</span>
+                                <strong id="calc-subtotal">₹0.00</strong>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; margin-bottom:0.35rem; color:var(--slate-600);">
+                                <span>Hub Handling & Delivery:</span>
+                                <span>₹40.00</span>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; margin-bottom:0.35rem; color:var(--slate-500); font-size:0.8rem;">
+                                <span>Platform Fee (10%):</span>
+                                <span id="calc-platform-fee">₹0.00</span>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; border-top:1px solid var(--slate-300); padding-top:0.4rem; font-weight:700; color:var(--primary-dark); font-size:1rem;">
+                                <span>Total Payable:</span>
+                                <span id="calc-total">₹0.00</span>
+                            </div>
+                        </div>
+
+                        <!-- Payment status message container -->
+                        <div id="payment-status-msg" style="display:none; margin-bottom:0.75rem;"></div>
+
+                        <!-- TEST MODE BADGE -->
+                        <div style="text-align:center; margin-bottom:0.6rem;">
+                            <span style="font-size:0.7rem; background:#fef9c3; color:#854d0e; padding:0.2rem 0.6rem; border-radius:99px; font-weight:600;">🔐 Razorpay TEST MODE — No real money</span>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-block" id="btn-confirm-order"
+                            data-idle-text="Pay &amp; Confirm Order 💳">
+                            Pay &amp; Confirm Order 💳
+                        </button>
+                    </form>
+
+                    <!-- Trust Features -->
+                    <div style="margin-top:1.5rem; border-top:1px solid var(--slate-100); padding-top:1rem;">
+                        <h4 style="font-size:0.85rem; font-weight:700; color:var(--slate-700); margin-bottom:0.6rem;">Why Buy Direct on AgriSmart?</h4>
+                        <div class="order-step-mini">
+                            <span style="font-size:1.2rem;">🚜</span>
+                            <div style="font-size:0.8rem; color:var(--slate-600);">
+                                <strong>Fair Price to Farmers:</strong> Up to 85% of price goes directly to the grower.
+                            </div>
+                        </div>
+                        <div class="order-step-mini">
+                            <span style="font-size:1.2rem;">🔬</span>
+                            <div style="font-size:0.8rem; color:var(--slate-600);">
+                                <strong>Certified Quality:</strong> Graded for freshness and weighed digitally at hubs.
+                            </div>
+                        </div>
+                        <div class="order-step-mini">
+                            <span style="font-size:1.2rem;">⏱️</span>
+                            <div style="font-size:0.8rem; color:var(--slate-600);">
+                                <strong>Harvested to Order:</strong> Delivered in 24 hours of harvest.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- SCRIPTS -->
+    <script src="/js/i18n.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/payment.js"></script>
+    <script>
+        let allProduce = [];
+        let selectedProduce = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadConsumerProduce();
+            checkUserAuth();
+        });
+
+        function checkUserAuth() {
+            const user = getCurrentUser();
+            const navActions = document.getElementById('nav-auth-actions');
+            if (user && navActions) {
+                const roleBadge = `<span style="font-size:0.75rem; background:#dbeafe; color:#1e40af; padding:0.15rem 0.5rem; border-radius:99px; text-transform:capitalize; margin-left:0.3rem;">${user.role || 'consumer'}</span>`;
+                navActions.innerHTML = `
+                    <span style="font-size:0.85rem; font-weight:600; color:var(--slate-700); display:inline-flex; align-items:center;">👤 ${user.name} ${roleBadge}</span>
+                    <a href="/orders.html" class="btn btn-outline btn-sm">Orders</a>
+                    <button class="btn btn-outline btn-sm" onclick="logout()">Sign Out</button>
+                `;
+            }
+        }
+
+        async function loadConsumerProduce() {
+            try {
+                const res = await apiFetch('/marketplace?limit=25');
+                if (res && res.status === 'success' && res.produce && res.produce.length > 0) {
+                    allProduce = res.produce.map(p => {
+                        const pid = p.produce_id || p.id;
+                        const price = parseFloat(p.price_per_kg ?? p.minimum_price_per_kg ?? 0);
+                        const avail = parseFloat(p.available_kg ?? p.available_quantity_kg ?? 0);
+                        return {
+                            id: pid,
+                            produce_id: pid,
+                            crop_name: p.crop_name || 'Fresh Harvest',
+                            variety_name: p.variety_name || '',
+                            farmer_name: p.farmer_name || p.farm_name || 'Verified Farmer',
+                            price_per_kg: price,
+                            minimum_price_per_kg: price,
+                            available_kg: avail,
+                            available_quantity_kg: avail,
+                            farm_location: p.farm_village ? `${p.farm_village}, ${p.farm_district || ''}` : (p.farm_location || 'Local Regional Hub'),
+                            distance_km: p.distance_km,
+                            emoji: p.emoji,
+                            primary_image_url: p.primary_image_url || null
+                        };
+                    });
+                    renderProduce(allProduce);
+                } else {
+                    renderFallbackProduce();
+                }
+            } catch (err) {
+                console.warn('Backend not ready, rendering prototype harvests:', err);
+                renderFallbackProduce();
+            }
+        }
+
+        function renderFallbackProduce() {
+            allProduce = [
+                { id: 1, produce_id: 1, crop_name: 'Tomato', variety_name: 'Hybrid Tomato (Shivam)', farmer_name: 'Demo Farmer - Selvam R', price_per_kg: 28.00, minimum_price_per_kg: 28.00, available_kg: 250, available_quantity_kg: 250, distance_km: 4.2, farm_location: 'Mohanur, Namakkal', grade: 'Grade A', primary_image_url: '/uploads/products/demo/tomato/tomato_hybrid_harvest.jpg' },
+                { id: 2, produce_id: 2, crop_name: 'Potato', variety_name: 'Ooty Mountain Potato', farmer_name: 'Demo Farmer - Elango V', price_per_kg: 42.00, minimum_price_per_kg: 42.00, available_kg: 400, available_quantity_kg: 400, distance_km: 7.5, farm_location: 'Ooty Terraces, Nilgiris', grade: 'Grade A', primary_image_url: '/uploads/products/demo/potato/potato_ooty_mountain.jpg' },
+                { id: 3, produce_id: 3, crop_name: 'Onion', variety_name: 'Chinna Vengayam (Sambar Shallot)', farmer_name: 'Demo Farmer - Murugan K', price_per_kg: 48.00, minimum_price_per_kg: 48.00, available_kg: 320, available_quantity_kg: 320, distance_km: 5.1, farm_location: 'Perundurai, Erode', grade: 'Grade A', primary_image_url: '/uploads/products/demo/onion/onion_sambar_shallots.jpg' },
+                { id: 4, produce_id: 4, crop_name: 'Moringa', variety_name: 'PKM-1 Long Drumstick', farmer_name: 'Demo Farmer - Ganesan C', price_per_kg: 40.00, minimum_price_per_kg: 40.00, available_kg: 180, available_quantity_kg: 180, distance_km: 9.3, farm_location: 'Aravakurichi, Karur', grade: 'Grade A', primary_image_url: '/uploads/products/demo/moringa/moringa_pkm1_drumsticks.jpg' },
+                { id: 5, produce_id: 5, crop_name: 'Banana', variety_name: 'Grand Naine (G9)', farmer_name: 'Demo Farmer - Balasubramanian S', price_per_kg: 28.00, minimum_price_per_kg: 28.00, available_kg: 350, available_quantity_kg: 350, distance_km: 6.4, farm_location: 'Kumbakonam, Thanjavur', grade: 'Grade A', primary_image_url: '/uploads/products/demo/banana/banana_grand_naine.jpg' }
+            ];
+            renderProduce(allProduce);
+        }
+
+        function renderProduce(items) {
+            const container = document.getElementById('produce-container');
+            if (!items || items.length === 0) {
+                container.innerHTML = '<div style="padding:2rem; text-align:center; color:var(--slate-500);">No fresh produce matches your filter.</div>';
+                return;
+            }
+
+            container.innerHTML = items.map(p => {
+                const pid = p.produce_id || p.id;
+                const price = parseFloat(p.price_per_kg ?? p.minimum_price_per_kg ?? 0);
+                const avail = parseFloat(p.available_kg ?? p.available_quantity_kg ?? 0);
+                const dist = p.distance_km ? `${parseFloat(p.distance_km).toFixed(1)} km away` : 'Nearby Farm';
+                const fallbackImg = (typeof getCropFallbackPhoto === 'function')
+                    ? getCropFallbackPhoto(p.crop_name)
+                    : '/uploads/products/demo/tomato/tomato_hybrid_harvest.jpg';
+                const imgSrc = p.primary_image_url || fallbackImg;
+
+                // Always display realistic harvest photograph
+                const thumbHtml = `
+                    <img src="${imgSrc}" alt="${p.crop_name}" loading="lazy"
+                         onerror="if(this.src!=='${fallbackImg}'){this.src='${fallbackImg}';}">
+                `;
+
+                return `
+                    <div class="product-card-consumer">
+                        <div class="produce-thumb">${thumbHtml}</div>
+                        <div class="produce-info">
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                                <div>
+                                    <h3 style="margin:0 0 0.2rem 0; font-size:1.1rem; font-weight:700;">${p.crop_name}${p.variety_name ? ' - ' + p.variety_name : ''}</h3>
+                                    <span class="traceability-pill">🧑‍🌾 Farmer: ${p.farmer_name || 'Verified Farmer'}</span>
+                                    <span class="traceability-pill" style="margin-left:0.35rem;">📍 ${dist}</span>
+                                </div>
+                                <div style="text-align:right;">
+                                    <div style="font-size:1.25rem; font-weight:800; color:var(--primary-dark);">₹${price.toFixed(2)}<span style="font-size:0.75rem; color:var(--slate-500); font-weight:400;">/kg</span></div>
+                                    <span class="badge badge-success" style="font-size:0.7rem;">${avail} kg available</span>
+                                </div>
+                            </div>
+                            <div style="margin-top:0.75rem; display:flex; justify-content:space-between; align-items:center;">
+                                <span style="font-size:0.8rem; color:var(--slate-500);">Origin: ${p.farm_location || 'Local Regional Hub'}</span>
+                                <button class="btn btn-outline btn-sm" onclick="selectForOrder(${pid})">
+                                    Quick Order 🛒
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function filterProduce() {
+            const cat = document.getElementById('crop-category-filter').value;
+            if (!cat) {
+                renderProduce(allProduce);
+            } else {
+                const filtered = allProduce.filter(p => (p.crop_name || '').toLowerCase().includes(cat.toLowerCase()));
+                renderProduce(filtered);
+            }
+        }
+
+        function selectForOrder(id) {
+            selectedProduce = allProduce.find(p => (p.produce_id == id || p.id == id));
+            if (!selectedProduce) return;
+
+            const preview = document.getElementById('selected-produce-preview');
+            const form = document.getElementById('consumer-order-form');
+            const price = parseFloat(selectedProduce.price_per_kg ?? selectedProduce.minimum_price_per_kg ?? 0);
+            const pid = selectedProduce.produce_id || selectedProduce.id;
+            const fallbackImg = (typeof getCropFallbackPhoto === 'function')
+                ? getCropFallbackPhoto(selectedProduce.crop_name)
+                : '/uploads/products/demo/tomato/tomato_hybrid_harvest.jpg';
+            const orderImgSrc = selectedProduce.primary_image_url || fallbackImg;
+            const previewImg = `
+                <img src="${orderImgSrc}" alt="${selectedProduce.crop_name}" loading="lazy"
+                     style="width:3rem;height:3rem;object-fit:cover;border-radius:8px;flex-shrink:0;"
+                     onerror="if(this.src!=='${fallbackImg}'){this.src='${fallbackImg}';}">
+            `;
+
+            preview.innerHTML = `
+                <div style="display:flex; align-items:center; gap:0.75rem; text-align:left;">
+                    ${previewImg}
+                    <div>
+                        <strong style="color:var(--slate-900); font-size:1rem;">${selectedProduce.crop_name} (${selectedProduce.variety_name || 'Standard'})</strong>
+                        <div style="font-size:0.8rem; color:var(--slate-600);">Farmer: ${selectedProduce.farmer_name} | ₹${price.toFixed(2)}/kg</div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('order-produce-id').value = pid;
+            document.getElementById('order-price-per-kg').value = price;
+
+            form.style.display = 'block';
+            calculateSubtotal();
+        }
+
+        function calculateSubtotal() {
+            if (!selectedProduce) return;
+            const kg = parseFloat(document.getElementById('order-kg').value || 1);
+            const price = parseFloat(selectedProduce.price_per_kg ?? selectedProduce.minimum_price_per_kg ?? 0);
+            const subtotal = Math.round(kg * price * 100) / 100;
+            const deliveryFee = 40.00;
+            const platformFee = Math.round(subtotal * 10) / 100;  // 10%
+            const total = Math.round((subtotal + deliveryFee + platformFee) * 100) / 100;
+
+            document.getElementById('calc-subtotal').textContent = `₹${subtotal.toFixed(2)}`;
+            document.getElementById('calc-platform-fee').textContent = `₹${platformFee.toFixed(2)}`;
+            document.getElementById('calc-total').textContent = `₹${total.toFixed(2)}`;
+        }
+
+        async function submitConsumerOrder(e) {
+            e.preventDefault();
+            const token = getToken();
+            if (!token) {
+                if (confirm('Please sign in as a Consumer to pay for your harvest order. Proceed to login?')) {
+                    window.location.href = '/login.html';
+                }
+                return;
+            }
+
+            const rawPid    = document.getElementById('order-produce-id').value;
+            const produceId = parseInt(rawPid, 10);
+            const kg        = parseFloat(document.getElementById('order-kg').value);
+            const address   = document.getElementById('order-address').value.trim();
+            const btn       = document.getElementById('btn-confirm-order');
+
+            if (!rawPid || isNaN(produceId) || produceId <= 0) {
+                _showPaymentError('Please select a valid produce item first.');
+                return;
+            }
+
+            if (!kg || kg <= 0 || !address) {
+                _showPaymentError('Please enter a valid quantity and delivery address.');
+                return;
+            }
+
+            // Get user info for Razorpay prefill
+            const user = getCurrentUser();
+
+            // Use checkoutAndPay: creates order → opens Razorpay → verifies payment
+            await checkoutAndPay(
+                {
+                    items: [{
+                        produce_id:   produceId,
+                        quantity_kg:  kg
+                    }],
+                    delivery_address: address,
+                    delivery_fee: 40.00
+                },
+                {
+                    buttonEl:      btn,
+                    customerName:  user?.name  || '',
+                    customerEmail: user?.email || '',
+                    customerPhone: user?.phone || '',
+                    onSuccess: ({ order_id, payment_id }) => {
+                        console.log(`[Payment] Order #${order_id} confirmed — ${payment_id}`);
+                        setTimeout(() => window.location.href = '/orders.html', 2500);
+                    },
+                    onFailure: ({ error }) => {
+                        console.error('[Payment] Failed:', error);
+                    }
+                }
+            );
+        }
+    </script>
+    <script src="/js/voice-guidance.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.AgriVoice) window.AgriVoice.attachPageHeaderVoice('customer');
+        });
+    </script>
+</body>
+</html>

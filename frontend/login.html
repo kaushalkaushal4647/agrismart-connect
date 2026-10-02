@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In - AgriSmart Connect</title>
+    <meta name="description" content="Sign in to your AgriSmart Connect account as a farmer, buyer, hub operator, or administrator.">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <header class="navbar">
+        <div class="container nav-container">
+            <a href="/index.html" class="brand-logo">
+                <div class="logo-icon">🌱</div>
+                <span>AgriSmart<span style="color:var(--primary-light);">Connect</span></span>
+            </a>
+
+            <div class="nav-actions">
+                <a href="/register.html" class="btn btn-outline btn-sm">Create Account</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- AUTH SECTION -->
+    <div class="auth-wrapper">
+        <div class="auth-card">
+            <div class="auth-header">
+                <h2>Welcome Back</h2>
+                <p>Sign in to manage produce, demand, and operations</p>
+            </div>
+
+            <form id="login-form">
+                <div class="form-group">
+                    <label class="form-label" for="login-identifier">Email or Phone Number</label>
+                    <input 
+                        type="text" 
+                        id="login-identifier" 
+                        class="form-control" 
+                        placeholder="e.g. farmer@demo.com or 9876543210" 
+                        required 
+                        autocomplete="username"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.4rem;">
+                        <label class="form-label" for="login-password" style="margin-bottom:0;">Password</label>
+                    </div>
+                    <input 
+                        type="password" 
+                        id="login-password" 
+                        class="form-control" 
+                        placeholder="••••••••" 
+                        required 
+                        autocomplete="current-password"
+                    >
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block btn-lg" style="margin-top:1.5rem;">
+                    Sign In to Portal
+                </button>
+            </form>
+
+            <!-- Quick Demo Accounts -->
+            <div class="demo-accounts-box">
+                <div class="demo-title">
+                    <span>⚡ Quick Test Logins</span>
+                    <span style="color:var(--primary);">Auto-fill</span>
+                </div>
+                <div class="demo-pills">
+                    <button type="button" class="demo-pill" onclick="fillDemoLogin('farmer')">🧑‍🌾 Farmer</button>
+                    <button type="button" class="demo-pill" onclick="fillDemoLogin('consumer')">🥗 Consumer</button>
+                    <button type="button" class="demo-pill" onclick="fillDemoLogin('restaurant')">🍽️ Restaurant</button>
+                    <button type="button" class="demo-pill" onclick="fillDemoLogin('retailer')">🏪 Retailer</button>
+                    <button type="button" class="demo-pill" onclick="fillDemoLogin('hub')">🏬 Hub Operator</button>
+                    <button type="button" class="demo-pill" onclick="fillDemoLogin('delivery')">🚚 Delivery</button>
+                    <button type="button" class="demo-pill" onclick="fillDemoLogin('admin')">📊 Admin</button>
+                </div>
+            </div>
+
+            <div style="text-align:center;margin-top:1.5rem;font-size:0.9rem;color:var(--slate-500);">
+                Don't have an account? <a href="/register.html" style="font-weight:600;">Register here</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/js/i18n.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/auth.js"></script>
+</body>
+</html>

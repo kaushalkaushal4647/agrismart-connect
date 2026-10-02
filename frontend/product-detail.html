@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Details - AgriSmart Connect</title>
+    <meta name="description" content="View verified farm produce specifications, harvest timeline, quality grades, and place demand-matched orders.">
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .detail-container {
+            max-width: 1100px;
+            margin: 2.5rem auto 4rem;
+            display: grid;
+            grid-template-columns: 1fr 1.15fr;
+            gap: 2.5rem;
+            align-items: flex-start;
+        }
+        @media (max-width: 900px) {
+            .detail-container {
+                grid-template-columns: 1fr;
+            }
+        }
+        @media (max-width: 480px) {
+            .detail-container { margin: 1rem auto 2rem; gap: 1rem; }
+            .main-image-wrapper { height: 240px; }
+            .spec-grid { grid-template-columns: 1fr; }
+            .price-banner .price-amount { font-size: 1.8rem; }
+            .form-row { flex-direction: column; gap: 0.5rem; }
+        }
+        .gallery-card {
+            background: var(--white);
+            border: 1px solid var(--slate-200);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+        }
+        .main-image-wrapper {
+            width: 100%;
+            height: 380px;
+            background: var(--slate-100);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+        .main-image-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+        .thumbnail-strip {
+            display: flex;
+            gap: 0.5rem;
+            padding: 0.75rem;
+            background: var(--slate-50);
+            border-top: 1px solid var(--slate-200);
+            overflow-x: auto;
+        }
+        .thumb-item {
+            width: 65px;
+            height: 65px;
+            border-radius: var(--radius-sm);
+            border: 2px solid transparent;
+            overflow: hidden;
+            cursor: pointer;
+            flex-shrink: 0;
+            background: #fff;
+        }
+        .thumb-item.active {
+            border-color: var(--primary);
+        }
+        .thumb-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .info-card {
+            background: var(--white);
+            border: 1px solid var(--slate-200);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            box-shadow: var(--shadow-sm);
+        }
+        .spec-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            background: var(--slate-50);
+            padding: 1.25rem;
+            border-radius: var(--radius-md);
+            margin: 1.5rem 0;
+            font-size: 0.88rem;
+        }
+        .spec-item span {
+            color: var(--slate-500);
+            display: block;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            font-weight: 700;
+            margin-bottom: 0.15rem;
+        }
+        .spec-item strong {
+            color: var(--slate-800);
+            font-size: 0.95rem;
+        }
+        .price-banner {
+            display: flex;
+            align-items: baseline;
+            gap: 0.5rem;
+            margin: 1rem 0;
+        }
+        .price-banner .price-currency {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--slate-800);
+        }
+        .price-banner .price-amount {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--primary-dark);
+        }
+        .price-banner .price-unit {
+            font-size: 1rem;
+            color: var(--slate-500);
+        }
+        .farmer-privacy-box {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: var(--radius-md);
+            padding: 1rem;
+            margin: 1.5rem 0;
+        }
+        .farmer-avatar-lg {
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            background: #dcfce7;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+        }
+        .order-summary-box {
+            background: var(--slate-50);
+            border: 1px solid var(--slate-200);
+            border-radius: var(--radius-md);
+            padding: 1rem 1.25rem;
+            margin-bottom: 1rem;
+            font-size: 0.88rem;
+        }
+        .order-summary-box .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.35rem;
+            color: var(--slate-600);
+        }
+        .order-summary-box .summary-row.total {
+            border-top: 1px solid var(--slate-300);
+            padding-top: 0.35rem;
+            margin-top: 0.35rem;
+            font-size: 1rem;
+            font-weight: 800;
+            color: var(--slate-900);
+        }
+        .trust-badges {
+            display: flex;
+            gap: 0.6rem;
+            flex-wrap: wrap;
+            margin: 1rem 0;
+        }
+        .trust-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-size: 0.73rem;
+            font-weight: 700;
+            color: var(--slate-600);
+            background: var(--slate-100);
+            border-radius: var(--radius-full);
+            padding: 0.25rem 0.6rem;
+        }
+        .hub-info-box {
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            border-radius: var(--radius-md);
+            padding: 0.85rem 1rem;
+            margin-top: 1rem;
+            font-size: 0.85rem;
+        }
+        /* Photo attribution ribbon under gallery */
+        .photo-attribution {
+            display: none;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.45rem 0.75rem;
+            background: #f8fafc;
+            border-top: 1px solid var(--slate-200);
+            font-size: 0.7rem;
+            color: var(--slate-500);
+            border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+        }
+        .photo-attribution.visible { display: flex; }
+        .photo-attribution a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .photo-attribution a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <header class="navbar">
+        <div class="container nav-container">
+            <a href="/index.html" class="brand-logo">
+                <div class="logo-icon">🌱</div>
+                <span>AgriSmart<span style="color:var(--primary-light);">Connect</span></span>
+            </a>
+
+            <ul class="nav-links">
+                <li><a href="/index.html" class="nav-link">Home</a></li>
+                <li><a href="/marketplace.html" class="nav-link">Marketplace</a></li>
+                <li><a href="/logistics.html" class="nav-link">AI Logistics</a></li>
+            </ul>
+
+            <div class="nav-actions" id="nav-auth-actions"></div>
+        </div>
+    </header>
+
+    <!-- BREADCRUMB -->
+    <div class="container" style="margin-top:1.5rem;">
+        <a href="/marketplace.html" style="font-size:0.85rem;color:var(--primary);font-weight:700;display:inline-flex;align-items:center;gap:0.3rem;">
+            ← Back to Marketplace
+        </a>
+    </div>
+
+    <!-- MAIN PRODUCT DETAILS -->
+    <main class="container">
+        <div class="detail-container">
+            <!-- LEFT: PRODUCT IMAGES -->
+            <div>
+                <div class="gallery-card">
+                    <div class="main-image-wrapper">
+                        <img id="detail-main-img" src="/uploads/products/demo/tomato/tomato_hybrid_harvest.jpg" alt="Agricultural Produce" loading="lazy">
+                        <span id="detail-organic-badge" style="position:absolute;top:15px;left:15px;background:#16a34a;color:#fff;font-size:0.75rem;font-weight:800;padding:0.25rem 0.65rem;border-radius:var(--radius-full);text-transform:uppercase;">
+                            Conventional
+                        </span>
+                    </div>
+                    <div class="thumbnail-strip" id="detail-thumb-strip">
+                        <!-- Dynamic Thumbnails -->
+                    </div>
+                    <!-- Wikimedia/license attribution ribbon -->
+                    <div class="photo-attribution" id="photo-attribution">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        <span id="attribution-text">Photo: <a id="attribution-link" href="#" target="_blank" rel="noopener">Wikimedia Commons</a></span>
+                        <span id="attribution-license" style="margin-left:auto;background:var(--slate-100);padding:0.1rem 0.4rem;border-radius:3px;"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT: PRODUCT INFORMATION -->
+            <div class="info-card">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.5rem;">
+                    <div>
+                        <span id="detail-category" class="section-badge" style="margin-bottom:0.3rem;">Vegetables</span>
+                        <h1 id="detail-title" style="font-size:2rem;margin:0.2rem 0;color:var(--slate-900);">Loading Product...</h1>
+                        <div id="detail-variety" style="color:var(--slate-500);font-weight:600;font-size:0.95rem;">--</div>
+                    </div>
+                    <span id="detail-grade-badge" class="grade-badge" style="font-size:0.85rem;padding:0.3rem 0.6rem;">Grade A</span>
+                </div>
+
+                <!-- PRICE -->
+                <div class="price-banner">
+                    <span class="price-currency">₹</span>
+                    <span class="price-amount" id="detail-price">--</span>
+                    <span class="price-unit" id="detail-unit">/ kg</span>
+                </div>
+
+                <!-- DESCRIPTION -->
+                <p id="detail-desc" style="color:var(--slate-600);line-height:1.5;font-size:0.92rem;margin-bottom:1rem;">
+                    Loading fresh produce information...
+                </p>
+
+                <!-- SPECS GRID -->
+                <div class="spec-grid">
+                    <div class="spec-item">
+                        <span>Available Quantity</span>
+                        <strong id="detail-avail-qty" style="color:var(--primary-dark);">-- kg</strong>
+                    </div>
+                    <div class="spec-item">
+                        <span>Min Order Qty (MOQ)</span>
+                        <strong id="detail-moq">-- kg</strong>
+                    </div>
+                    <div class="spec-item">
+                        <span>Harvest Date</span>
+                        <strong id="detail-harvest-date">--</strong>
+                    </div>
+                    <div class="spec-item">
+                        <span>Origin District</span>
+                        <strong id="detail-location">Namakkal, Tamil Nadu</strong>
+                    </div>
+                    <div class="spec-item">
+                        <span>Collection Hub</span>
+                        <strong id="detail-hub">Namakkal Agro Hub</strong>
+                    </div>
+                    <div class="spec-item">
+                        <span>Quality Inspection</span>
+                        <strong style="color:#0369a1;">Certified at Hub</strong>
+                    </div>
+                </div>
+
+                <!-- PRODUCER INFO (PRIVACY SAFE - NO PRIVATE PHONE) -->
+                <div class="farmer-privacy-box">
+                    <div class="farmer-avatar-lg">🌾</div>
+                    <div>
+                        <div style="font-size:0.75rem;text-transform:uppercase;color:#15803d;font-weight:800;letter-spacing:0.5px;">Verified Producer</div>
+                        <div id="detail-farm-name" style="font-weight:800;font-size:1rem;color:var(--slate-800);">--</div>
+                        <div id="detail-farm-place" style="font-size:0.8rem;color:var(--slate-500);">Tamil Nadu, India</div>
+                    </div>
+                </div>
+
+                 <!-- ORDER ACTIONS -->
+                <div style="margin-top:1.5rem;">
+                    <div class="form-row" style="align-items:flex-end;margin-bottom:0.75rem;">
+                        <div class="form-group" style="margin-bottom:0;flex:1;">
+                            <label class="form-label" for="order-quantity-input">Order Quantity (kg)</label>
+                            <input type="number" id="order-quantity-input" class="form-control" min="1" step="1" value="5"
+                                oninput="updateOrderSummary()">
+                        </div>
+                        <div class="form-group" style="margin-bottom:0;flex:1.5;">
+                            <label class="form-label" for="order-address-input">Delivery Address</label>
+                            <input type="text" id="order-address-input" class="form-control" placeholder="Street, town, district">
+                        </div>
+                    </div>
+
+                    <!-- LIVE ORDER SUMMARY -->
+                    <div class="order-summary-box" id="order-summary-box" style="display:none;">
+                        <div class="summary-row">
+                            <span>Subtotal (<span id="sum-qty">0</span> kg × <span id="sum-price">0</span>/kg)</span>
+                            <strong id="sum-subtotal">₹0.00</strong>
+                        </div>
+                        <div class="summary-row">
+                            <span>Platform &amp; Logistics fee (5%)</span>
+                            <strong id="sum-fee">₹0.00</strong>
+                        </div>
+                        <div class="summary-row">
+                            <span>Hub Collection</span>
+                            <strong>₹65.00</strong>
+                        </div>
+                        <div class="summary-row total">
+                            <span>Total Payable</span>
+                            <strong id="sum-total" style="color:var(--primary-dark);">₹0.00</strong>
+                        </div>
+                    </div>
+
+                    <!-- TRUST BADGES -->
+                    <div class="trust-badges">
+                        <span class="trust-badge">✓ FSSAI Compliant</span>
+                        <span class="trust-badge">🚚 Hub-Verified Delivery</span>
+                        <span class="trust-badge">🔒 Secure Payment</span>
+                        <span class="trust-badge" id="detail-demo-badge" style="background:#fef9c3;color:#92400e;">✓ DEMO DATA</span>
+                    </div>
+
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                        <button class="btn btn-outline btn-lg" onclick="handleAddToCart()">
+                            + Add to Cart
+                        </button>
+                        <button class="btn btn-primary btn-lg" onclick="handleDirectBuy()">
+                            ⚡ Buy Now (Instant Reserve)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- HUB INFO -->
+                <div class="hub-info-box" id="hub-info-box" style="display:none;">
+                    <div style="font-size:0.72rem;text-transform:uppercase;color:#0369a1;font-weight:800;margin-bottom:0.35rem;">Collection Hub Details</div>
+                    <div id="hub-info-name" style="font-weight:700;">--</div>
+                    <div id="hub-info-district" style="color:var(--slate-500);font-size:0.8rem;"></div>
+                    <div id="hub-info-hours" style="color:var(--slate-500);font-size:0.8rem;margin-top:0.2rem;"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="/js/i18n.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/voice-guidance.js"></script>
+    <script>
+        let currentItem = null;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Render nav auth state
+            if (typeof renderNavAuth === 'function') renderNavAuth();
+
+            const params = new URLSearchParams(window.location.search);
+            const produceId = params.get('id');
+            if (!produceId) {
+                window.location.href = '/marketplace.html';
+                return;
+            }
+            await loadProductDetails(produceId);
+        });
+
+        async function loadProductDetails(id) {
+            try {
+                const res = await apiFetch(`/marketplace/${id}`);
+                const item = res.item;
+                currentItem = item;
+
+                const displayName = item.product_name || item.crop_name;
+                document.title = `${displayName} - AgriSmart Connect`;
+
+                const titleEl = document.getElementById('detail-title');
+                titleEl.innerText = displayName;
+                if (window.AgriVoice) {
+                    const voiceBtn = document.createElement('button');
+                    voiceBtn.type = 'button';
+                    voiceBtn.className = 'agv-speaker-btn';
+                    voiceBtn.style.marginLeft = '0.75rem';
+                    voiceBtn.setAttribute('aria-label', `Listen to ${displayName} details`);
+                    voiceBtn.setAttribute('title', 'Listen to produce details');
+                    voiceBtn.innerHTML = '<span class="agv-speaker-icon">🔈</span>';
+                    voiceBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const summary = `${displayName}, variety ${item.variety_name || 'Standard Cultivar'}. Price is ${Number(item.minimum_price_per_kg).toFixed(2)} rupees per ${item.unit || 'kilogram'}. Available quantity is ${item.available_quantity_kg} kilograms, harvested from ${item.farm_district || 'Tamil Nadu'}. Quality grade is ${item.quality_grade || 'Grade A'}.`;
+                        window.AgriVoice.speak(summary);
+                    });
+                    titleEl.appendChild(voiceBtn);
+                }
+                document.getElementById('detail-variety').innerText = item.variety_name || 'Standard Cultivar';
+                document.getElementById('detail-category').innerText = item.produce_category || item.crop_category || 'Vegetables';
+                document.getElementById('detail-price').innerText = Number(item.minimum_price_per_kg).toFixed(2);
+                document.getElementById('detail-unit').innerText = `/ ${item.unit || 'kg'}`;
+                document.getElementById('detail-avail-qty').innerText = `${Number(item.available_quantity_kg).toLocaleString()} ${item.unit || 'kg'}`;
+                document.getElementById('detail-moq').innerText = `${item.min_order_quantity_kg || 1.0} ${item.unit || 'kg'}`;
+
+                const hDate = item.harvest_date ? new Date(item.harvest_date).toLocaleDateString('en-IN', {
+                    day: 'numeric', month: 'short', year: 'numeric'
+                }) : 'Immediate';
+                document.getElementById('detail-harvest-date').innerText = hDate;
+                document.getElementById('detail-location').innerText = `${item.farm_village ? item.farm_village + ', ' : ''}${item.farm_district || 'Namakkal'}, Tamil Nadu`;
+                document.getElementById('detail-hub').innerText = item.hub_name || 'Regional Agri Hub';
+                document.getElementById('detail-grade-badge').innerText = item.quality_grade || 'Grade A';
+
+                const orgBadge = document.getElementById('detail-organic-badge');
+                if (item.organic_status === 'organic') {
+                    orgBadge.innerText = '🌿 Organic Certified';
+                    orgBadge.style.background = '#15803d';
+                } else {
+                    orgBadge.innerText = '🌾 Farm Direct';
+                    orgBadge.style.background = '#0284c7';
+                }
+
+                document.getElementById('detail-desc').innerText = item.description ||
+                    `Farm-fresh ${item.crop_name} (${item.variety_name || 'commercial grade'}) from ${item.farm_district || 'Tamil Nadu'}. Graded to ${item.quality_grade || 'Grade A'} specifications.`;
+
+                document.getElementById('detail-farm-name').innerText = item.farm_name || item.farmer_name || 'Verified Farmer';
+                document.getElementById('detail-farm-place').innerText = `${item.farm_village ? item.farm_village + ', ' : ''}${item.farm_district || 'Tamil Nadu'}, India`;
+
+                // Hub info
+                if (item.hub_name) {
+                    const hubBox = document.getElementById('hub-info-box');
+                    hubBox.style.display = 'block';
+                    document.getElementById('hub-info-name').innerText = item.hub_name;
+                    document.getElementById('hub-info-district').innerText = item.hub_district ? `${item.hub_district}, Tamil Nadu` : 'Tamil Nadu';
+                    const start = item.operating_start || '06:00';
+                    const end = item.operating_end || '18:00';
+                    document.getElementById('hub-info-hours').innerText = `Operating hours: ${start.substring(0,5)} – ${end.substring(0,5)}`;
+                }
+
+                // Set initial MOQ
+                const qtyInput = document.getElementById('order-quantity-input');
+                const moqVal = parseFloat(item.min_order_quantity_kg) || 1.0;
+                qtyInput.min = moqVal;
+                qtyInput.value = Math.max(moqVal, 5.0);
+                updateOrderSummary();
+
+                // Handle Gallery Images
+                renderGallery(item);
+
+            } catch (err) {
+                console.error('Failed to load product details:', err);
+                if (typeof showToast === 'function') showToast('Product load error: ' + err.message, 'error');
+            }
+        }
+
+        function updateOrderSummary() {
+            if (!currentItem) return;
+            const qty = parseFloat(document.getElementById('order-quantity-input').value) || 0;
+            const price = parseFloat(currentItem.minimum_price_per_kg) || 0;
+            const subtotal = qty * price;
+            const fee = subtotal * 0.05;
+            const hub = 65;
+            const total = subtotal + fee + hub;
+
+            document.getElementById('sum-qty').innerText = qty;
+            document.getElementById('sum-price').innerText = `₹${price.toFixed(2)}`;
+            document.getElementById('sum-subtotal').innerText = `₹${subtotal.toFixed(2)}`;
+            document.getElementById('sum-fee').innerText = `₹${fee.toFixed(2)}`;
+            document.getElementById('sum-total').innerText = `₹${total.toFixed(2)}`;
+            document.getElementById('order-summary-box').style.display = qty > 0 ? 'block' : 'none';
+        }
+
+        // Store per-image attribution data for the gallery
+        let galleryImages = [];
+
+        function renderGallery(item) {
+            const mainImg = document.getElementById('detail-main-img');
+            const thumbStrip = document.getElementById('detail-thumb-strip');
+            const images = item.images || [];
+            galleryImages = images;
+
+            const fallbackUrls = {
+                'Tomato': '/uploads/products/demo/tomato/tomato_hybrid_harvest.jpg',
+                'Potato': '/uploads/products/demo/potato/potato_kufri_jyoti.jpg',
+                'Onion': '/uploads/products/demo/onion/onion_bellary_red.jpg',
+                'Moringa': '/uploads/products/demo/moringa/moringa_pkm1_drumsticks.jpg',
+                'Drumstick': '/uploads/products/demo/moringa/moringa_pkm1_drumsticks.jpg',
+                'Banana': '/uploads/products/demo/banana/banana_grand_naine.jpg',
+                'Coconut': '/uploads/products/demo/coconut/coconut_west_coast_tall.jpg',
+                'Mango': '/uploads/products/demo/mango/mango_alphonso_ratnagiri.jpg',
+                'Brinjal': '/uploads/products/demo/brinjal/brinjal_purple_round.jpg',
+                'Carrot': '/uploads/products/demo/carrot/carrot_kuroda_nantes.jpg',
+                'Green Chilli': '/uploads/products/demo/green_chilli/green_chilli_g4_spicy.jpg',
+                'Chilli': '/uploads/products/demo/green_chilli/green_chilli_g4_spicy.jpg',
+                'Rice': '/uploads/products/demo/rice/rice_bpt_samba_masuri.jpg',
+                'Paddy': '/uploads/products/demo/rice/rice_bpt_samba_masuri.jpg',
+                'Turmeric': '/uploads/products/demo/turmeric/turmeric_erode_gopichettipalayam.jpg',
+                'Sugarcane': '/uploads/products/demo/sugarcane/sugarcane_co_86032.jpg',
+                'Groundnut': '/uploads/products/demo/groundnut/groundnut_kadiri_6.jpg',
+                'Cabbage': '/uploads/products/demo/cabbage/cabbage_golden_acre.jpg'
+            };
+            const defaultImg = fallbackUrls[item.crop_name] || '/uploads/products/demo/tomato/tomato_hybrid_harvest.jpg';
+
+            if (!images.length) {
+                mainImg.src = defaultImg;
+                mainImg.onerror = null;
+                thumbStrip.innerHTML = `<div class="thumb-item active"><img src="${defaultImg}" alt="${item.crop_name}" loading="lazy"></div>`;
+                return;
+            }
+
+            const primary = images.find(img => img.is_primary) || images[0];
+            mainImg.src = primary.image_url;
+            mainImg.onerror = function() { this.src = defaultImg; this.onerror = null; };
+            mainImg.loading = 'lazy';
+
+            // Show attribution for primary image
+            setAttribution(primary);
+
+            thumbStrip.innerHTML = images.map((img, idx) => `
+                <div class="thumb-item ${img.image_url === primary.image_url ? 'active' : ''}" onclick="switchImage('${img.image_url}', this, ${idx})">
+                    <img src="${img.image_url}" alt="Product photo" loading="lazy"
+                         onerror="this.parentElement.style.display='none'">
+                </div>
+            `).join('');
+        }
+
+        function setAttribution(imgData) {
+            const bar = document.getElementById('photo-attribution');
+            if (!imgData || !imgData.source) { bar.classList.remove('visible'); return; }
+            const txt = document.getElementById('attribution-text');
+            const lnk = document.getElementById('attribution-link');
+            const lic = document.getElementById('attribution-license');
+            const src = imgData.source || 'Wikimedia Commons';
+            const attr = imgData.attribution || src;
+            const license = imgData.license || '';
+            // Build link to Wikimedia if it matches
+            const href = src.toLowerCase().includes('wikimedia') ? 'https://commons.wikimedia.org' : '#';
+            lnk.href = href;
+            lnk.textContent = attr.length > 60 ? attr.substring(0, 58) + '…' : attr;
+            lic.textContent = license;
+            bar.classList.add('visible');
+        }
+
+        function switchImage(url, el, idx) {
+            const mainImg = document.getElementById('detail-main-img');
+            mainImg.src = url;
+            document.querySelectorAll('.thumb-item').forEach(t => t.classList.remove('active'));
+            el.classList.add('active');
+            // Update attribution for selected image
+            if (galleryImages && galleryImages[idx]) setAttribution(galleryImages[idx]);
+        }
+
+        function handleAddToCart() {
+            if (!currentItem) return;
+            const qty = parseFloat(document.getElementById('order-quantity-input').value);
+            const moq = parseFloat(currentItem.min_order_quantity_kg) || 1.0;
+            if (qty < moq) {
+                if (typeof showToast === 'function') showToast(`Minimum order quantity is ${moq} kg.`, 'error');
+                return;
+            }
+            if (typeof addToCart === 'function') {
+                addToCart({
+                    produce_id: currentItem.produce_id,
+                    crop_name: currentItem.crop_name,
+                    variety_name: currentItem.variety_name,
+                    minimum_price_per_kg: currentItem.minimum_price_per_kg,
+                    available_quantity_kg: currentItem.available_quantity_kg
+                }, qty);
+            }
+        }
+
+        async function handleDirectBuy() {
+            const user = getCurrentUser();
+            if (!user) {
+                if (typeof showToast === 'function') showToast('Please sign in to place an order.', 'info');
+                setTimeout(() => window.location.href = '/login.html', 1200);
+                return;
+            }
+            if (!currentItem) return;
+
+            const qty = parseFloat(document.getElementById('order-quantity-input').value);
+            const address = document.getElementById('order-address-input').value.trim();
+            const moq = parseFloat(currentItem.min_order_quantity_kg) || 1.0;
+
+            if (qty < moq) {
+                showToast(`Minimum order quantity is ${moq} kg.`, 'error');
+                return;
+            }
+            if (!address) {
+                showToast('Please provide your delivery address.', 'error');
+                return;
+            }
+
+            try {
+                await apiFetch('/orders', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        delivery_address: address,
+                        items: [{
+                            produce_id: currentItem.produce_id,
+                            quantity_kg: qty,
+                            price_per_kg: currentItem.minimum_price_per_kg
+                        }]
+                    })
+                });
+
+                showToast('Order confirmed! Stock successfully reserved.', 'success');
+                setTimeout(() => window.location.href = '/orders.html', 1200);
+            } catch (err) {
+                showToast(err.message || 'Order failed.', 'error');
+            }
+        }
+    </script>
+</body>
+</html>

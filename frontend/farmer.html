@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Farmer Dashboard - AgriSmart Connect</title>
+    <meta name="description" content="Manage upcoming crop harvests, view matched buyer demand, and track collection and payouts.">
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        /* Dashboard specific additions */
+        .dashboard-header {
+            background: var(--white);
+            border-bottom: 1px solid var(--slate-200);
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+        }
+        .farmer-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+        }
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 2.5rem;
+        }
+        .kpi-card {
+            background: var(--white);
+            border: 1px solid var(--slate-200);
+            border-radius: var(--radius-md);
+            padding: 1.25rem 1.5rem;
+            box-shadow: var(--shadow-sm);
+        }
+        .kpi-label {
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--slate-500);
+            margin-bottom: 0.4rem;
+        }
+        .kpi-value {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--slate-900);
+        }
+        .data-table-card {
+            background: var(--white);
+            border: 1px solid var(--slate-200);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+        }
+        .table-header {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--slate-200);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .table-responsive {
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+        th {
+            background: var(--slate-50);
+            padding: 0.9rem 1.25rem;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--slate-600);
+            border-bottom: 1px solid var(--slate-200);
+        }
+        td {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid var(--slate-100);
+            font-size: 0.9rem;
+            vertical-align: middle;
+        }
+        tr:hover td {
+            background-color: var(--slate-50);
+        }
+        /* Status Badges */
+        .status-badge {
+            display: inline-block;
+            font-size: 0.72rem;
+            font-weight: 800;
+            padding: 0.25rem 0.65rem;
+            border-radius: var(--radius-full);
+            letter-spacing: 0.5px;
+        }
+        .badge-available { background: #dcfce7; color: #166534; }
+        .badge-open { background: #e0f2fe; color: #0369a1; }
+        .badge-matched { background: #fef3c7; color: #92400e; }
+        .badge-paid { background: #ede9fe; color: #5b21b6; }
+        .badge-danger { background: #fee2e2; color: #991b1b; }
+
+        /* Modal styling */
+        .modal-backdrop {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        .modal-content {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            width: 100%;
+            max-width: 600px;
+            box-shadow: var(--shadow-xl);
+            padding: 2rem;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid var(--slate-200);
+            padding-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <header class="navbar">
+        <div class="container nav-container">
+            <a href="/index.html" class="brand-logo">
+                <div class="logo-icon">🌱</div>
+                <span>AgriSmart<span style="color:var(--primary-light);">Connect</span></span>
+                <span class="brand-badge" style="background:#dcfce7;color:#15803d;">Farmer Portal</span>
+            </a>
+
+            <ul class="nav-links">
+                <li><a href="/index.html" class="nav-link">Home</a></li>
+                <li><a href="/farmer.html" class="nav-link active">Farmer Dashboard</a></li>
+                <li><a href="/marketplace.html" class="nav-link">Marketplace</a></li>
+                <li><a href="/ai.html" class="nav-link">AI Agronomist</a></li>
+                <li><a href="/iot.html" class="nav-link">Smart IoT</a></li>
+            </ul>
+
+            <div class="nav-actions" id="nav-auth-actions">
+                <!-- Dynamically populated by api.js -->
+            </div>
+        </div>
+    </header>
+
+    <!-- FARMER HEADER -->
+    <section class="dashboard-header">
+        <div class="container farmer-meta">
+            <div>
+                <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.25rem;">
+                    <span class="role-tag role-tag-farmer">Verified Farmer</span>
+                    <span id="farmer-name-display" style="font-weight:700;color:var(--slate-600);">Loading...</span>
+                </div>
+                <h1 id="farm-name-display" style="font-size:2rem;margin-bottom:0.25rem;">My Farm Dashboard</h1>
+                <div style="font-size:0.9rem;color:var(--slate-500);display:flex;gap:1.5rem;">
+                    <span>📍 Location: <strong id="farm-location-display" style="color:var(--slate-700);">--</strong></span>
+                    <span>📐 Size: <strong id="farm-size-display" style="color:var(--slate-700);">--</strong></span>
+                </div>
+            </div>
+
+            <div style="display:flex;gap:0.75rem;flex-wrap:wrap;align-items:center;">
+                <a href="/ai.html" class="btn btn-outline" style="background:#f0fdf4;border-color:#86efac;color:#166534;font-weight:700;display:inline-flex;align-items:center;gap:0.4rem;">
+                    🤖 AI Agronomist
+                </a>
+                <a href="/iot.html" class="btn btn-outline" style="background:#f0f9ff;border-color:#7dd3fc;color:#0369a1;font-weight:700;display:inline-flex;align-items:center;gap:0.4rem;">
+                    💧 Smart IoT
+                </a>
+                <button class="btn btn-primary btn-lg" onclick="openModal('add-produce-modal')">
+                    + List New Produce
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- MAIN DASHBOARD METRICS & TABLES -->
+    <main class="container" style="padding-bottom: 4rem;">
+        <!-- KPI METRICS -->
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-label">Active Listings</div>
+                <div class="kpi-value" id="stat-listings">0</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Available Produce</div>
+                <div class="kpi-value" id="stat-available-kg" style="color:var(--primary-dark);">0 kg</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Demand Matched / Reserved</div>
+                <div class="kpi-value" id="stat-reserved-kg" style="color:var(--accent-amber);">0 kg</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Paid Earnings</div>
+                <div class="kpi-value" id="stat-paid-earnings" style="color:var(--primary);">₹0</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Pending Payouts</div>
+                <div class="kpi-value" id="stat-pending-earnings" style="color:var(--slate-600);">₹0</div>
+            </div>
+        </div>
+
+        <!-- FARMER PRECISION & AUTOMATION TOOLS -->
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem;">
+            <!-- 1. AI Agronomist Card -->
+            <div class="card" style="background:var(--white); border:1px solid #bbf7d0; border-radius:var(--radius-lg); padding:1.5rem; box-shadow:var(--shadow-sm); display:flex; flex-direction:column; justify-content:space-between;">
+                <div>
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1rem;">
+                        <div style="display:flex; align-items:center; gap:0.75rem;">
+                            <div style="width:42px; height:42px; border-radius:10px; background:#dcfce7; display:flex; align-items:center; justify-content:center; font-size:1.4rem;">🤖</div>
+                            <div>
+                                <h3 style="font-size:1.15rem; margin:0; color:var(--slate-900); cursor:pointer;" data-voice-module="aiAssistant" title="Click to hear explanation">AI Agronomist & Crop Doctor <span class="agv-speaker-icon" style="font-size:0.9rem;">🔈</span></h3>
+                                <span style="font-size:0.8rem; color:#15803d; font-weight:600;">Ollama Multimodal LLaVA Engine</span>
+                            </div>
+                        </div>
+                        <span id="farmer-ai-status-badge" class="badge badge-success" style="font-size:0.75rem;">Checking...</span>
+                    </div>
+
+                    <p style="font-size:0.875rem; color:var(--slate-600); margin-bottom:1rem; line-height:1.4;">
+                        Instant agronomic advice, organic disease treatments, and image-based leaf pest inspection powered by local LLaVA AI.
+                    </p>
+
+                    <!-- Quick Query Input -->
+                    <div style="background:#f8fafc; border:1px solid var(--slate-200); border-radius:var(--radius-md); padding:0.75rem; margin-bottom:1rem;">
+                        <div style="display:flex; gap:0.5rem;">
+                            <input type="text" id="farmer-ai-quick-input" class="form-control" style="font-size:0.85rem;" placeholder="Ask: e.g. Tomato leaf curl cure, organic pest spray...">
+                            <button id="farmer-ai-quick-btn" class="btn btn-primary btn-sm" onclick="handleFarmerQuickAI()" style="white-space:nowrap;">Ask AI</button>
+                        </div>
+                        <div id="farmer-ai-quick-response" style="margin-top:0.75rem; font-size:0.85rem; color:var(--slate-700); max-height:130px; overflow-y:auto; display:none; background:#fff; padding:0.6rem; border-radius:6px; border:1px solid #e2e8f0; line-height:1.45;"></div>
+                    </div>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #f1f5f9; padding-top:0.85rem; margin-top:0.5rem; flex-wrap:wrap; gap:0.5rem;">
+                    <span style="font-size:0.8rem; color:var(--slate-500);">📷 Multi-modal Visual Leaf Pathologist</span>
+                    <a href="/ai.html" class="btn btn-outline btn-sm" style="border-color:#16a34a; color:#15803d; font-weight:700;">Open Full AI Doctor →</a>
+                </div>
+            </div>
+
+            <!-- 2. Smart IoT Irrigation Card -->
+            <div class="card" style="background:var(--white); border:1px solid #bae6fd; border-radius:var(--radius-lg); padding:1.5rem; box-shadow:var(--shadow-sm); display:flex; flex-direction:column; justify-content:space-between;">
+                <div>
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1rem;">
+                        <div style="display:flex; align-items:center; gap:0.75rem;">
+                            <div style="width:42px; height:42px; border-radius:10px; background:#e0f2fe; display:flex; align-items:center; justify-content:center; font-size:1.4rem;">💧</div>
+                            <div>
+                                <h3 style="font-size:1.15rem; margin:0; color:var(--slate-900); cursor:pointer;" data-voice-module="irrigation" title="Click to hear explanation">Smart Irrigation IoT Console <span class="agv-speaker-icon" style="font-size:0.9rem;">🔈</span></h3>
+                                <span style="font-size:0.8rem; color:#0369a1; font-weight:600;">ESP32 Telemetry & Closed-Loop Relay</span>
+                            </div>
+                        </div>
+                        <span id="farmer-iot-pump-badge" class="badge" style="background:#e2e8f0; color:#475569; font-size:0.75rem;">Syncing...</span>
+                    </div>
+
+                    <!-- Live Telemetry Metrics Row -->
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.75rem; margin-bottom:1rem;">
+                        <div style="background:#f0f9ff; border:1px solid #e0f2fe; border-radius:var(--radius-md); padding:0.75rem;">
+                            <div style="font-size:0.75rem; color:#0369a1; font-weight:700; text-transform:uppercase;">Soil Moisture</div>
+                            <div style="display:flex; align-items:baseline; gap:0.4rem; margin:0.25rem 0;">
+                                <span id="farmer-iot-moisture-val" style="font-size:1.6rem; font-weight:800; color:#0c4a6e;">--%</span>
+                                <span id="farmer-iot-moisture-status" style="font-size:0.75rem; font-weight:700; color:#0284c7;">Checking</span>
+                            </div>
+                            <div style="height:6px; background:#bae6fd; border-radius:3px; overflow:hidden;">
+                                <div id="farmer-iot-moisture-bar" style="height:100%; width:0%; background:#0284c7; transition:width 0.5s ease;"></div>
+                            </div>
+                        </div>
+
+                        <div style="background:#f8fafc; border:1px solid var(--slate-200); border-radius:var(--radius-md); padding:0.75rem;">
+                            <div style="font-size:0.75rem; color:var(--slate-500); font-weight:700; text-transform:uppercase;">Field Temp & Mode</div>
+                            <div style="display:flex; align-items:baseline; gap:0.4rem; margin:0.25rem 0;">
+                                <span id="farmer-iot-temp-val" style="font-size:1.6rem; font-weight:800; color:var(--slate-800);">--°C</span>
+                            </div>
+                            <div style="font-size:0.75rem; color:var(--slate-600); font-weight:600;">
+                                Mode: <strong id="farmer-iot-mode-val" style="color:#0369a1;">AUTO</strong> (Trigger: &lt;<span id="farmer-iot-thresh-val">35</span>%)
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Pump Trigger Controls -->
+                    <div style="display:flex; gap:0.5rem; align-items:center; margin-bottom:0.75rem;">
+                        <button id="farmer-pump-toggle-btn" class="btn btn-sm btn-outline" style="flex:1; font-weight:700;" onclick="toggleFarmerPump()">
+                            ⚡ Toggle Water Pump
+                        </button>
+                        <button id="farmer-mode-toggle-btn" class="btn btn-sm btn-outline" style="flex:1; font-weight:600;" onclick="toggleFarmerMode()">
+                            🔄 Switch Mode
+                        </button>
+                    </div>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #f1f5f9; padding-top:0.85rem; margin-top:0.5rem; flex-wrap:wrap; gap:0.5rem;">
+                    <span id="farmer-iot-device-label" style="font-size:0.8rem; color:var(--slate-500);">Device: ESP32-AGRI-01</span>
+                    <a href="/iot.html" class="btn btn-outline btn-sm" style="border-color:#0284c7; color:#0369a1; font-weight:700;">Open Full IoT Console →</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- PRODUCE LISTINGS TABLE -->
+        <div class="data-table-card">
+            <div class="table-header">
+                <div>
+                    <h3 style="font-size:1.25rem;">My Crop Harvest & Produce Pipeline</h3>
+                    <p style="font-size:0.85rem;color:var(--slate-500);">Live produce available for dynamic matching with local buyers & regional collection hubs</p>
+                </div>
+                <button class="btn btn-outline btn-sm" onclick="loadFarmerProduce()">Refresh Listings</button>
+            </div>
+
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Crop & Variety</th>
+                            <th>Available / Total</th>
+                            <th>Min Price</th>
+                            <th>Harvest Date</th>
+                            <th>Assigned Hub</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="produce-table-body">
+                        <tr>
+                            <td colspan="7" style="text-align:center;padding:2.5rem;color:var(--slate-400);">Loading your produce listings...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- ADD / EDIT PRODUCE MODAL -->
+    <div id="add-produce-modal" class="modal-backdrop">
+        <div class="modal-content" style="max-width: 680px;">
+            <div class="modal-header">
+                <div>
+                    <h3 style="font-size:1.4rem; cursor:pointer;" data-voice-module="productRegistration" title="Click to hear explanation">Register Agricultural Product <span class="agv-speaker-icon" style="font-size:1rem;">🔈</span></h3>
+                    <p style="font-size:0.85rem;color:var(--slate-500);">Add agricultural produce to the Tamil Nadu demand-matched marketplace</p>
+                </div>
+                <button type="button" class="btn btn-outline btn-sm" onclick="closeModal('add-produce-modal')">✕</button>
+            </div>
+
+            <form id="add-produce-form">
+                <!-- Row 1: Crop & Variety -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="produce-crop-select">Select Crop *</label>
+                        <select id="produce-crop-select" class="form-control form-select" required>
+                            <option value="">Loading crops...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="produce-variety-select">Cultivar / Variety</label>
+                        <select id="produce-variety-select" class="form-control form-select">
+                            <option value="">-- Select crop first --</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Product Name & Category -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="produce-product-name">Product Title / Display Name *</label>
+                        <input type="text" id="produce-product-name" class="form-control" placeholder="e.g. Farm Fresh Hybrid Tomatoes" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="produce-category-select">Category</label>
+                        <select id="produce-category-select" class="form-control form-select">
+                            <option value="Vegetables">Vegetables</option>
+                            <option value="Fruits">Fruits</option>
+                            <option value="Tubers">Tubers</option>
+                            <option value="Spices">Spices</option>
+                            <option value="Plantations">Plantations</option>
+                            <option value="Cereals">Cereals</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- AI Price Insight Banner -->
+                <div id="ai-price-insight-banner" style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:var(--radius-md);padding:0.75rem 1rem;margin-bottom:1rem;display:none;font-size:0.85rem;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <span style="font-weight:800;color:#15803d;">💡 AI Price Insight (Tamil Nadu APMC & Marketplace)</span>
+                        <span style="font-size:0.7rem;background:#dcfce7;color:#166534;padding:0.15rem 0.4rem;border-radius:4px;font-weight:700;">ESTIMATE</span>
+                    </div>
+                    <div style="margin-top:0.35rem;display:flex;gap:1.5rem;color:var(--slate-700);">
+                        <div>Recent Market: <strong id="price-range-display">--</strong></div>
+                        <div>Fair Estimate: <strong id="price-fair-display" style="color:#059669;">--</strong></div>
+                    </div>
+                </div>
+
+                <!-- Quantities & Units -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="produce-available-qty">Available Quantity *</label>
+                        <input type="number" id="produce-available-qty" class="form-control" step="1" min="1" placeholder="e.g. 250" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="produce-unit-select">Measurement Unit</label>
+                        <select id="produce-unit-select" class="form-control form-select">
+                            <option value="kg">Kilogram (kg)</option>
+                            <option value="quintal">Quintal (100 kg)</option>
+                            <option value="piece">Piece (Coconuts/Fruit)</option>
+                            <option value="bunch">Bunch (Bananas/Greens)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Price, MOQ & Organic Status -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="produce-min-price">Floor Price (₹ per unit) *</label>
+                        <input type="number" id="produce-min-price" class="form-control" step="0.5" min="1" placeholder="e.g. 35.00" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="produce-moq">Min Order Qty (MOQ)</label>
+                        <input type="number" id="produce-moq" class="form-control" step="1" min="1" value="2">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="produce-organic-select">Farming Method</label>
+                        <select id="produce-organic-select" class="form-control form-select">
+                            <option value="conventional">Conventional</option>
+                            <option value="organic">Organic / Natural</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Harvest Date & Expected Date -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="produce-harvest-date">Harvest Date *</label>
+                        <input type="date" id="produce-harvest-date" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="produce-grade-select">Quality Grade</label>
+                        <select id="produce-grade-select" class="form-control form-select">
+                            <option value="Grade A">Grade A (Export / Premium)</option>
+                            <option value="Grade B">Grade B (Standard Commercial)</option>
+                            <option value="Grade C">Grade C (Processing / Bulk)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Hub Selection with AI Recommendation -->
+                <div class="form-group">
+                    <label class="form-label" for="produce-hub-select" style="display:flex;justify-content:space-between;">
+                        <span>Preferred Regional Collection Hub *</span>
+                        <span id="ai-hub-rec-badge" style="color:#059669;font-weight:700;font-size:0.78rem;"></span>
+                    </label>
+                    <select id="produce-hub-select" class="form-control form-select" required>
+                        <option value="">Loading hubs...</option>
+                    </select>
+                </div>
+
+                <!-- Description & AI Assist Button -->
+                <div class="form-group">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.4rem;">
+                        <label class="form-label" for="produce-description" style="margin-bottom:0;">Product Description</label>
+                        <button type="button" class="btn btn-sm btn-outline" onclick="triggerFarmerAIAssist()" style="border-color:#16a34a;color:#15803d;font-weight:700;font-size:0.75rem;">
+                            ✨ AI Assist Description
+                        </button>
+                    </div>
+                    <textarea id="produce-description" class="form-control" rows="2" placeholder="Brief produce details, freshness notes, culinary qualities..."></textarea>
+                    <div id="ai-assist-checklist" style="font-size:0.75rem;color:var(--slate-500);margin-top:0.35rem;display:none;"></div>
+                </div>
+
+                <!-- Initial Image Upload -->
+                <div class="form-group">
+                    <label class="form-label" for="produce-initial-img">Product Image (Optional)</label>
+                    <input type="file" id="produce-initial-img" class="form-control" accept="image/png, image/jpeg, image/webp">
+                    <small style="color:var(--slate-400);font-size:0.75rem;">PNG, JPEG or WebP under 5MB. You can also crop, rotate & enhance images in Image Studio after listing.</small>
+                </div>
+
+                <div style="display:flex;justify-content:flex-end;gap:1rem;margin-top:1.5rem;">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('add-produce-modal')">Cancel</button>
+                    <button type="button" class="btn btn-outline" onclick="saveProductAsDraft()">Save as Draft</button>
+                    <button type="submit" class="btn btn-primary">List Product on Marketplace</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- PRODUCT IMAGE STUDIO & MANAGEMENT MODAL -->
+    <div id="image-studio-modal" class="modal-backdrop">
+        <div class="modal-content" style="max-width: 750px;">
+            <div class="modal-header">
+                <div>
+                    <h3 style="font-size:1.35rem;">Product Image Studio</h3>
+                    <p id="image-studio-subtitle" style="font-size:0.85rem;color:var(--slate-500);">Crop, rotate, enhance brightness/contrast, and set primary photo</p>
+                </div>
+                <button type="button" class="btn btn-outline btn-sm" onclick="closeModal('image-studio-modal')">✕</button>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:flex-start;">
+                <!-- Canvas Preview & Tools -->
+                <div>
+                    <div style="background:var(--slate-100);border-radius:var(--radius-md);overflow:hidden;width:100%;height:260px;display:flex;align-items:center;justify-content:center;border:1px dashed var(--slate-300);margin-bottom:0.75rem;">
+                        <canvas id="studio-canvas" style="max-width:100%;max-height:100%;"></canvas>
+                        <div id="studio-empty-msg" style="color:var(--slate-400);font-size:0.85rem;">Select an image to preview & edit</div>
+                    </div>
+
+                    <!-- Editing Controls -->
+                    <div style="display:flex;gap:0.5rem;margin-bottom:0.75rem;flex-wrap:wrap;">
+                        <button type="button" class="btn btn-outline btn-sm" onclick="rotateStudioCanvas(90)">
+                            🔄 Rotate 90°
+                        </button>
+                        <button type="button" class="btn btn-outline btn-sm" onclick="cropSquareCanvas()">
+                            ✂️ 1:1 Square Crop
+                        </button>
+                        <button type="button" class="btn btn-outline btn-sm" onclick="resetStudioCanvas()">
+                            ↩ Reset
+                        </button>
+                    </div>
+
+                    <!-- Sliders -->
+                    <div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.8rem;">
+                        <div>
+                            <label>Brightness: <span id="bright-val">100%</span></label>
+                            <input type="range" id="studio-brightness" min="50" max="150" value="100" style="width:100%;" oninput="applyCanvasFilters()">
+                        </div>
+                        <div>
+                            <label>Contrast: <span id="contrast-val">100%</span></label>
+                            <input type="range" id="studio-contrast" min="50" max="150" value="100" style="width:100%;" oninput="applyCanvasFilters()">
+                        </div>
+                    </div>
+
+                    <div style="margin-top:1rem;">
+                        <input type="file" id="studio-file-input" class="form-control form-control-sm" accept="image/png, image/jpeg, image/webp" onchange="handleStudioFileSelect(event)">
+                        <button class="btn btn-primary btn-sm btn-block" style="margin-top:0.5rem;" onclick="uploadStudioEditedImage()">
+                            Upload & Save Image
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Existing Product Images List -->
+                <div>
+                    <h4 style="font-size:0.95rem;margin-bottom:0.5rem;">Uploaded Gallery Images</h4>
+                    <div id="studio-gallery-list" style="display:flex;flex-direction:column;gap:0.5rem;max-height:360px;overflow-y:auto;">
+                        <!-- Rendered by JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/js/i18n.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/voice-guidance.js"></script>
+    <script src="/js/farmer.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.AgriVoice) window.AgriVoice.attachPageHeaderVoice('farmer');
+        });
+    </script>
+</body>
+</html>

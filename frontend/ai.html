@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgriSmart AI Assistant & Crop Doctor - Powered by LLava</title>
+    <meta name="description" content="AI-powered agricultural assistant and visual crop disease diagnosis using local Ollama llava:7b-v1.6 model.">
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .ai-header {
+            background: linear-gradient(135deg, rgba(220, 252, 231, 0.8), rgba(240, 253, 244, 1));
+            border-bottom: 1px solid var(--slate-200);
+            padding: 2.25rem 0;
+            margin-bottom: 2rem;
+        }
+        .ai-grid {
+            display: grid;
+            grid-template-columns: 1.1fr 1fr;
+            gap: 2rem;
+            align-items: flex-start;
+        }
+        .chat-box {
+            background: var(--white);
+            border: 1px solid var(--slate-200);
+            border-radius: var(--radius-lg);
+            display: flex;
+            flex-direction: column;
+            height: 580px;
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+        }
+        .chat-messages {
+            flex: 1;
+            padding: 1.25rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .chat-msg {
+            max-width: 82%;
+            padding: 0.85rem 1.15rem;
+            border-radius: var(--radius-md);
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        .chat-msg-user {
+            align-self: flex-end;
+            background: var(--primary);
+            color: white;
+            border-bottom-right-radius: 2px;
+        }
+        .chat-msg-ai {
+            align-self: flex-start;
+            background: var(--slate-100);
+            color: var(--slate-800);
+            border-bottom-left-radius: 2px;
+        }
+        .chat-input-area {
+            border-top: 1px solid var(--slate-200);
+            padding: 1rem;
+            display: flex;
+            gap: 0.65rem;
+            background: var(--slate-50);
+            align-items: center;
+        }
+        .quick-chips {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 0.75rem;
+        }
+        .chip {
+            font-size: 0.75rem;
+            background: var(--white);
+            border: 1px solid var(--slate-300);
+            border-radius: var(--radius-full);
+            padding: 0.25rem 0.65rem;
+            cursor: pointer;
+            transition: var(--transition-fast);
+        }
+        .chip:hover {
+            border-color: var(--primary);
+            background: var(--primary-50);
+            color: var(--primary-dark);
+        }
+        /* Mic button */
+        .mic-btn {
+            flex-shrink: 0;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            border: 2px solid var(--slate-300);
+            background: var(--white);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.15rem;
+            transition: all 0.2s ease;
+            outline: none;
+        }
+        .mic-btn:hover {
+            border-color: var(--primary);
+            background: var(--primary-50);
+        }
+        .mic-btn.recording {
+            border-color: #ef4444;
+            background: #fef2f2;
+            animation: mic-pulse 1s infinite;
+        }
+        @keyframes mic-pulse {
+            0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.35); }
+            50%      { box-shadow: 0 0 0 8px rgba(239,68,68,0); }
+        }
+        /* Streaming cursor blink inside AI bubble */
+        .stream-cursor {
+            display: inline-block;
+            width: 2px;
+            height: 1em;
+            background: var(--slate-500);
+            margin-left: 2px;
+            vertical-align: text-bottom;
+            animation: blink 0.8s step-end infinite;
+        }
+        @keyframes blink {
+            0%,100% { opacity: 1; }
+            50%      { opacity: 0; }
+        }
+        .upload-dropzone {
+            border: 2px dashed var(--slate-300);
+            border-radius: var(--radius-md);
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition-fast);
+            background: var(--slate-50);
+            margin-bottom: 1rem;
+        }
+        .upload-dropzone:hover {
+            border-color: var(--primary);
+            background: var(--primary-50);
+        }
+        @media (max-width: 900px) {
+            .ai-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <header class="navbar">
+        <div class="container nav-container">
+            <a href="/index.html" class="brand-logo">
+                <div class="logo-icon">🌱</div>
+                <span>AgriSmart<span style="color:var(--primary-light);">Connect</span></span>
+                <span class="brand-badge" style="background:#dcfce7;color:#166534;">AI Copilot</span>
+            </a>
+
+            <ul class="nav-links">
+                <li><a href="/index.html" class="nav-link">Home</a></li>
+                <li><a href="/farmer.html" class="nav-link">Farmer Dashboard</a></li>
+                <li><a href="/marketplace.html" class="nav-link">Marketplace</a></li>
+                <li><a href="/ai.html" class="nav-link active">AI Agronomist</a></li>
+                <li><a href="/iot.html" class="nav-link">Smart IoT</a></li>
+            </ul>
+
+            <div class="nav-actions" id="nav-auth-actions">
+                <!-- Populated by api.js -->
+            </div>
+        </div>
+    </header>
+
+    <!-- HEADER -->
+    <section class="ai-header">
+        <div class="container">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1.5rem;">
+                <div>
+                    <span class="section-badge" style="color:var(--primary-dark);">Local LLM & Vision Engine</span>
+                    <h1 style="font-size:2.2rem;margin-bottom:0.25rem;">AgriSmart AI Assistant & Crop Doctor</h1>
+                    <p style="color:var(--slate-600);font-size:1rem;">
+                        Real-time agronomy Q&A, fertilizer balancing, and visual pest/disease image diagnosis running locally on your laptop via <code>ollama llava:7b-v1.6</code>.
+                    </p>
+                </div>
+
+                <div class="system-health-banner" id="ollama-status-banner">
+                    <span class="status-dot" id="ollama-dot"></span>
+                    <span id="ollama-status-text">Detecting local Ollama...</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- MAIN AI PANELS -->
+    <main class="container" style="padding-bottom: 4rem;">
+        <div class="ai-grid">
+            <!-- 1. TEXT AGRONOMY CHATBOT -->
+            <div>
+                <div style="margin-bottom:0.75rem;">
+                    <h3 style="font-size:1.25rem;">💬 Agronomy & Market Advisory Chat</h3>
+                    <p style="font-size:0.85rem;color:var(--slate-500);">Ask questions about fertilization, irrigation schedules, or harvest timing</p>
+                </div>
+
+                <div class="quick-chips">
+                    <span class="chip" onclick="askChip('What is the ideal organic fertilizer for tomatoes before flowering?')">🍅 Tomato Fertilization</span>
+                    <span class="chip" onclick="askChip('How to cure purple blotch and thrips in Tamil Nadu sambar onions?')">🧅 Onion Pest Cure</span>
+                    <span class="chip" onclick="askChip('How to manage cold storage humidity for potato tubers?')">🥔 Potato Storage</span>
+                    <span class="chip" onclick="askChip('Best companion crops for cabbage to prevent diamondback moth?')">🥬 Cabbage IPM</span>
+                </div>
+
+                <div class="chat-box">
+                    <div class="chat-messages" id="chat-messages">
+                        <div class="chat-msg chat-msg-ai">
+                            <strong>AgriSmart AI:</strong><br>
+                            Namaste! I am your AI Agronomist powered by <code>llava:7b-v1.6</code>. You can ask me any crop advice or upload a leaf photo on the right for an instant disease diagnosis.
+                        </div>
+                    </div>
+
+                    <form class="chat-input-area" id="chat-form">
+                        <button type="button" class="mic-btn" id="mic-btn" title="Voice input (hold to speak)" onclick="toggleVoiceInput()">🎤</button>
+                        <input type="text" id="chat-input" class="form-control" placeholder="Ask about crops, pests, soil, or harvest..." autocomplete="off">
+                        <button type="submit" class="btn btn-primary" id="chat-send-btn" style="white-space:nowrap;">Ask AI</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- 2. MULTIMODAL CROP DOCTOR (VISION) -->
+            <div class="auth-card" style="width:100%;max-width:none;box-shadow:var(--shadow-sm);border:1px solid var(--slate-200);padding:2rem;">
+                <div style="margin-bottom:1.25rem;">
+                    <h3 style="font-size:1.25rem;cursor:pointer;" data-voice-module="cropDoctor" title="Click to hear Crop Disease Doctor explanation">📸 Visual Crop Disease Doctor <span class="agv-speaker-icon" style="font-size:0.9rem;">🔈</span></h3>
+                    <p style="font-size:0.85rem;color:var(--slate-500);">Upload a photo of an affected leaf or fruit for multimodal pathology analysis</p>
+                </div>
+
+                <div class="upload-dropzone" id="dropzone" onclick="document.getElementById('crop-image-input').click()">
+                    <div style="font-size:2.5rem;margin-bottom:0.5rem;">🍃</div>
+                    <div style="font-weight:700;color:var(--slate-800);">Click or Drag & Drop Crop Photo</div>
+                    <div style="font-size:0.8rem;color:var(--slate-500);margin-top:0.25rem;">JPG, PNG supported</div>
+                    <input type="file" id="crop-image-input" accept="image/*" style="display:none;">
+                </div>
+
+                <div id="image-preview-container" style="display:none;margin-bottom:1rem;text-align:center;">
+                    <img id="image-preview" src="" alt="Crop Preview" style="max-height:180px;border-radius:var(--radius-md);box-shadow:var(--shadow-sm);border:1px solid var(--slate-200);">
+                    <div style="margin-top:0.5rem;">
+                        <button class="btn btn-outline btn-sm" onclick="clearImagePreview()">Change Photo</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="doctor-query">Additional Symptoms / Notes (Optional)</label>
+                    <input type="text" id="doctor-query" class="form-control" placeholder="e.g. Yellow spots on lower leaves appearing for 3 days">
+                </div>
+
+                <button class="btn btn-primary btn-block btn-lg" id="btn-diagnose" onclick="diagnoseCropImage()">
+                    🔬 Diagnose with LLava Vision
+                </button>
+
+                <!-- Diagnosis Output Container -->
+                <div id="diagnosis-result-container" style="margin-top:1.5rem;display:none;">
+                    <div style="background:var(--slate-50);border:1px solid var(--slate-200);border-radius:var(--radius-md);padding:1.25rem;">
+                        <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.75rem;">
+                            <span style="font-size:1.25rem;">🩺</span>
+                            <strong style="font-size:1.05rem;color:var(--slate-900);">Pathology Diagnosis Report</strong>
+                        </div>
+                        <div id="diagnosis-text" style="font-size:0.88rem;line-height:1.6;color:var(--slate-700);white-space:pre-wrap;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="container footer-content">
+            <div style="display:flex;align-items:center;gap:0.75rem;">
+                <div class="logo-icon" style="width:28px;height:28px;font-size:0.9rem;">🌱</div>
+                <span style="font-weight:700;color:var(--slate-800);">AgriSmart Connect</span>
+                <span>© 2026</span>
+            </div>
+            <ul class="footer-links">
+                <li><a href="/index.html">Home</a></li>
+                <li><a href="/marketplace.html">Marketplace</a></li>
+                <li><a href="/ai.html">AI Copilot</a></li>
+                <li><a href="/iot.html">IoT Irrigation</a></li>
+            </ul>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="/js/i18n.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/voice-guidance.js"></script>
+    <script>
+        let currentImageBase64 = null;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Attach page voice header for AI Assistant
+            if (window.AgriVoice) {
+                window.AgriVoice.attachPageHeaderVoice('aiAssistant');
+                const initialMsg = document.querySelector('.chat-msg.chat-msg-ai');
+                if (initialMsg) {
+                    const initialText = "Namaste! I am your AI Agronomist powered by llava:7b-v1.6. You can ask me any crop advice or upload a leaf photo on the right for an instant disease diagnosis.";
+                    window.AgriVoice.injectChatListenButton(initialMsg, initialText);
+                }
+            }
+
+            // Farmer-only access guard
+            const user = typeof getCurrentUser === 'function' ? getCurrentUser() : null;
+            if (!user || user.role !== 'farmer') {
+                document.body.innerHTML = `
+                    <div style="
+                        display:flex;flex-direction:column;align-items:center;justify-content:center;
+                        min-height:100vh;font-family:'Plus Jakarta Sans',sans-serif;
+                        background:linear-gradient(135deg,#f0fdf4,#dcfce7);
+                        text-align:center;padding:2rem;
+                    ">
+                        <div style="font-size:4rem;margin-bottom:1rem;">🌾</div>
+                        <h2 style="font-size:1.75rem;font-weight:800;color:#166534;margin-bottom:0.5rem;">Farmers Only</h2>
+                        <p style="color:#374151;max-width:420px;margin:0 auto 1.5rem;font-size:1rem;">The AI Agronomist is an exclusive tool for registered farmers on AgriSmart Connect.</p>
+                        <div style="display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;">
+                            <a href="/login.html" style="
+                                background:#15803d;color:#fff;padding:0.65rem 1.5rem;
+                                border-radius:9999px;font-weight:700;text-decoration:none;
+                                font-size:0.95rem;
+                            ">Sign In as Farmer</a>
+                            <a href="/index.html" style="
+                                background:#fff;color:#374151;padding:0.65rem 1.5rem;
+                                border-radius:9999px;font-weight:700;text-decoration:none;
+                                border:1px solid #d1d5db;font-size:0.95rem;
+                            ">Back to Home</a>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+            await checkOllama();
+            initChat();
+            initImageUpload();
+        });
+
+        // 1. Check Ollama Status
+        async function checkOllama() {
+            const dot = document.getElementById('ollama-dot');
+            const text = document.getElementById('ollama-status-text');
+            try {
+                const res = await apiFetch('/ai/status');
+                if (res.ollama && res.ollama.online) {
+                    dot.className = 'status-dot active';
+                    text.innerHTML = `<strong>Online</strong> — Model: <code>${res.ollama.active_model}</code> (Local)`;
+                } else {
+                    dot.className = 'status-dot error';
+                    text.innerHTML = `Ollama offline — Start Ollama on laptop`;
+                }
+            } catch {
+                dot.className = 'status-dot error';
+                text.innerHTML = `Ollama offline — Start Ollama on laptop`;
+            }
+        }
+
+        // 2. Chatbot Logic — SSE Streaming
+        let activeStream = null;   // AbortController for current stream
+        let isRecording = false;   // voice input state
+        let recognition = null;    // SpeechRecognition instance
+
+        function initChat() {
+            const form = document.getElementById('chat-form');
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const input = document.getElementById('chat-input');
+                const prompt = input.value.trim();
+                if (!prompt) return;
+
+                appendChatMessage(prompt, 'user');
+                input.value = '';
+
+                const sendBtn = document.getElementById('chat-send-btn');
+                sendBtn.disabled = true;
+                sendBtn.innerText = '⏹ Stop';
+                sendBtn.onclick = () => { if (activeStream) activeStream.abort(); };
+
+                await streamAIResponse(prompt);
+
+                sendBtn.disabled = false;
+                sendBtn.innerText = 'Ask AI';
+                sendBtn.onclick = null;
+                sendBtn.type = 'submit';
+            });
+        }
+
+        async function streamAIResponse(prompt) {
+            const box = document.getElementById('chat-messages');
+
+            // Create streaming AI bubble
+            const msgEl = document.createElement('div');
+            msgEl.className = 'chat-msg chat-msg-ai';
+            const label = document.createElement('strong');
+            label.textContent = 'AgriSmart AI:';
+            const br = document.createElement('br');
+            const textNode = document.createTextNode('');
+            const cursor = document.createElement('span');
+            cursor.className = 'stream-cursor';
+            msgEl.appendChild(label);
+            msgEl.appendChild(br);
+            msgEl.appendChild(textNode);
+            msgEl.appendChild(cursor);
+            box.appendChild(msgEl);
+            box.scrollTop = box.scrollHeight;
+
+            // Collect full text for final newline rendering
+            let accumulated = '';
+
+            activeStream = new AbortController();
+
+            try {
+                // Get auth token from localStorage (same pattern used by apiFetch)
+                const token = localStorage.getItem('agrismart_token');
+
+                const response = await fetch(`${API_BASE}/ai/stream`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                    },
+                    body: JSON.stringify({ message: prompt }),
+                    signal: activeStream.signal
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Server error ${response.status}`);
+                }
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    buffer += decoder.decode(value, { stream: true });
+
+                    // SSE events are separated by double newline
+                    const parts = buffer.split('\n\n');
+                    buffer = parts.pop();  // keep incomplete event in buffer
+
+                    for (const part of parts) {
+                        const line = part.trim();
+                        if (!line.startsWith('data:')) continue;
+                        const raw = line.slice(5).trim();
+                        if (raw === '[DONE]') break;
+                        try {
+                            const evt = JSON.parse(raw);
+                            if (evt.error) {
+                                accumulated += `\n⚠️ ${evt.error}`;
+                            } else if (evt.token) {
+                                accumulated += evt.token;
+                            }
+                            // Update bubble text
+                            textNode.textContent = accumulated;
+                            box.scrollTop = box.scrollHeight;
+                        } catch { /* ignore parse errors */ }
+                    }
+                }
+            } catch (err) {
+                if (err.name !== 'AbortError') {
+                    accumulated += accumulated ? `\n\n⚠️ Stream interrupted: ${err.message}` : `⚠️ ${err.message}`;
+                    textNode.textContent = accumulated;
+                }
+            } finally {
+                // Remove cursor, render final text with line breaks
+                cursor.remove();
+                // Re-render with <br> for newlines
+                const finalHtml = accumulated.replace(/\n/g, '<br>');
+                msgEl.innerHTML = `<strong>AgriSmart AI:</strong><br>${finalHtml || '<em>No response received.</em>'}`;
+                box.scrollTop = box.scrollHeight;
+                activeStream = null;
+                // Inject 🔈 Listen button for this AI response
+                if (window.AgriVoice && accumulated.trim()) {
+                    window.AgriVoice.injectChatListenButton(msgEl, accumulated);
+                }
+            }
+        }
+
+        function appendChatMessage(text, sender) {
+            const box = document.getElementById('chat-messages');
+            const msg = document.createElement('div');
+            msg.className = `chat-msg chat-msg-${sender}`;
+            msg.innerHTML = sender === 'ai'
+                ? `<strong>AgriSmart AI:</strong><br>${text.replace(/\n/g, '<br>')}`
+                : text;
+            box.appendChild(msg);
+            box.scrollTop = box.scrollHeight;
+        }
+
+        // 2b. Voice Input (Web Speech API)
+        function toggleVoiceInput() {
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                showToast('Voice input is not supported in this browser. Try Chrome or Edge.', 'error');
+                return;
+            }
+
+            if (isRecording) {
+                // Stop recording
+                if (recognition) recognition.stop();
+                return;
+            }
+
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.lang = 'en-IN';         // Indian English — works well for farmers
+            recognition.interimResults = true;   // Show partial results in real time
+            recognition.maxAlternatives = 1;
+            recognition.continuous = false;
+
+            const micBtn = document.getElementById('mic-btn');
+            const input = document.getElementById('chat-input');
+
+            recognition.onstart = () => {
+                isRecording = true;
+                micBtn.classList.add('recording');
+                micBtn.title = 'Listening… click to stop';
+                input.placeholder = '🎙️ Listening...';
+            };
+
+            recognition.onresult = (event) => {
+                let interim = '';
+                let final = '';
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    const t = event.results[i][0].transcript;
+                    if (event.results[i].isFinal) final += t;
+                    else interim += t;
+                }
+                input.value = final || interim;
+            };
+
+            recognition.onend = () => {
+                isRecording = false;
+                micBtn.classList.remove('recording');
+                micBtn.title = 'Voice input';
+                input.placeholder = 'Ask about crops, pests, soil, or harvest...';
+                // Auto-submit if we captured something
+                if (input.value.trim()) {
+                    document.getElementById('chat-form').dispatchEvent(new Event('submit'));
+                }
+            };
+
+            recognition.onerror = (event) => {
+                isRecording = false;
+                micBtn.classList.remove('recording');
+                const msgs = {
+                    'not-allowed': 'Microphone permission denied. Allow mic in browser settings.',
+                    'no-speech': 'No speech detected. Try again.',
+                    'network': 'Network error during voice recognition.'
+                };
+                showToast(msgs[event.error] || `Voice error: ${event.error}`, 'error');
+            };
+
+            recognition.start();
+        }
+
+        function askChip(query) {
+            document.getElementById('chat-input').value = query;
+            document.getElementById('chat-form').dispatchEvent(new Event('submit'));
+        }
+
+        // 3. Image Upload & Diagnosis
+        function initImageUpload() {
+            const fileInput = document.getElementById('crop-image-input');
+            fileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = () => {
+                    currentImageBase64 = reader.result;
+                    document.getElementById('image-preview').src = currentImageBase64;
+                    document.getElementById('image-preview-container').style.display = 'block';
+                    document.getElementById('dropzone').style.display = 'none';
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function clearImagePreview() {
+            currentImageBase64 = null;
+            document.getElementById('crop-image-input').value = '';
+            document.getElementById('image-preview-container').style.display = 'none';
+            document.getElementById('dropzone').style.display = 'block';
+            document.getElementById('diagnosis-result-container').style.display = 'none';
+        }
+
+        async function diagnoseCropImage() {
+            if (!currentImageBase64) {
+                showToast('Please upload a crop leaf image first.', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('btn-diagnose');
+            const resultBox = document.getElementById('diagnosis-result-container');
+            const resultText = document.getElementById('diagnosis-text');
+
+            btn.disabled = true;
+            btn.innerHTML = '🔬 Analyzing with LLava:7b-v1.6...';
+            resultBox.style.display = 'block';
+            resultText.innerText = 'Running multimodal computer vision analysis on your laptop... (this takes ~10-20 seconds on GPU/CPU)';
+
+            const query = document.getElementById('doctor-query').value.trim();
+
+            try {
+                const res = await apiFetch('/ai/diagnose', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        image: currentImageBase64,
+                        question: query
+                    })
+                });
+
+                resultText.innerText = res.diagnosis;
+                if (window.AgriVoice && res.diagnosis) {
+                    window.AgriVoice.injectChatListenButton(resultText, res.diagnosis);
+                }
+                showToast('Crop pathology report generated!', 'success');
+
+            } catch (err) {
+                resultText.innerText = `Analysis failed: ${err.message}. Please verify local Ollama llava:7b-v1.6 is responsive.`;
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '🔬 Diagnose with LLava Vision';
+            }
+        }
+    </script>
+</body>
+</html>

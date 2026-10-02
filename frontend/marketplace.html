@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgriSmart Marketplace - Demand-Matched Fresh Produce</title>
+    <meta name="description" content="Discover verified upcoming farm harvests. Connect directly with local farmers and coordinate collection through regional hubs.">
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .marketplace-header {
+            background: linear-gradient(135deg, rgba(240, 253, 244, 0.8), rgba(248, 250, 252, 1));
+            border-bottom: 1px solid var(--slate-200);
+            padding: 2.5rem 0;
+            margin-bottom: 2rem;
+        }
+        .filter-panel {
+            background: var(--white);
+            border: 1px solid var(--slate-200);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 2rem;
+        }
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            align-items: flex-end;
+        }
+        .produce-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+        .produce-card {
+            background: var(--white);
+            border: 1px solid var(--slate-200);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition-normal);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .produce-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary-light);
+        }
+        .produce-card-header {
+            padding: 1.5rem 1.5rem 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 1px solid var(--slate-100);
+        }
+        .produce-category-pill {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--primary);
+            background: var(--primary-50);
+            padding: 0.15rem 0.5rem;
+            border-radius: var(--radius-full);
+            display: inline-block;
+            margin-bottom: 0.35rem;
+        }
+        .produce-title {
+            font-size: 1.35rem;
+            color: var(--slate-900);
+        }
+        .produce-variety {
+            font-size: 0.85rem;
+            color: var(--slate-500);
+            font-weight: 500;
+        }
+        .produce-price {
+            text-align: right;
+        }
+        .produce-price .currency {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--slate-900);
+        }
+        .produce-price .amount {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--primary-dark);
+        }
+        .produce-price .unit {
+            font-size: 0.75rem;
+            color: var(--slate-500);
+            display: block;
+        }
+        .produce-card-body {
+            padding: 1.25rem 1.5rem;
+            flex-grow: 1;
+        }
+        .produce-detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.88rem;
+            margin-bottom: 0.6rem;
+        }
+        .produce-detail-row span {
+            color: var(--slate-500);
+        }
+        .produce-detail-row strong {
+            color: var(--slate-800);
+        }
+        .grade-badge {
+            background: #f1f5f9;
+            color: #334155;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 0.15rem 0.5rem;
+            border-radius: var(--radius-sm);
+        }
+        .produce-card-footer {
+            padding: 1.25rem 1.5rem;
+            background: var(--slate-50);
+            border-top: 1px solid var(--slate-100);
+        }
+        .farmer-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .farmer-avatar {
+            width: 36px;
+            height: 36px;
+            background: var(--primary-100);
+            border-radius: var(--radius-full);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+        }
+        .farmer-name {
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: var(--slate-800);
+        }
+        .farmer-location {
+            font-size: 0.78rem;
+            color: var(--slate-500);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <header class="navbar">
+        <div class="container nav-container">
+            <a href="/index.html" class="brand-logo">
+                <div class="logo-icon">🌱</div>
+                <span>AgriSmart<span style="color:var(--primary-light);">Connect</span></span>
+            </a>
+
+            <ul class="nav-links">
+                <li><a href="/index.html" class="nav-link">Home</a></li>
+                <li><a href="/marketplace.html" class="nav-link active">Marketplace</a></li>
+                <li><a href="/logistics.html" class="nav-link">🗺️ AI Logistics Map</a></li>
+            </ul>
+
+            <div class="nav-actions" id="nav-auth-actions">
+                <!-- Dynamically populated -->
+            </div>
+        </div>
+    </header>
+
+    <!-- HEADER -->
+    <section class="marketplace-header">
+        <div class="container">
+            <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:1.5rem;">
+                <div>
+                    <span class="section-badge">Direct Supply Pipeline</span>
+                    <h1 style="font-size:2.2rem;margin-bottom:0.5rem;">Upcoming & Available Farm Produce</h1>
+                    <p style="color:var(--slate-600);font-size:1rem;max-width:650px;">
+                        Browse confirmed farmer harvest listings. Place demand for guaranteed matching and aggregation through regional collection hubs.
+                    </p>
+                </div>
+                <div>
+                    <button class="btn btn-outline btn-sm" id="btn-use-location">Use My Location 📍</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- MAIN CONTENT & FILTERS -->
+    <main class="container" style="padding-bottom: 4rem;">
+        <!-- FILTER BAR -->
+        <div class="filter-panel">
+            <div class="filter-grid">
+                <div class="form-group" style="margin-bottom:0;">
+                    <label class="form-label" for="filter-crop">Crop</label>
+                    <select id="filter-crop" class="form-control form-select">
+                        <option value="">All Crops</option>
+                    </select>
+                </div>
+
+                <div class="form-group" style="margin-bottom:0;">
+                    <label class="form-label" for="filter-district">TN District</label>
+                    <select id="filter-district" class="form-control form-select">
+                        <option value="">All Districts</option>
+                        <option>Ariyalur</option><option>Chengalpattu</option><option>Chennai</option>
+                        <option>Coimbatore</option><option>Cuddalore</option><option>Dharmapuri</option>
+                        <option>Dindigul</option><option>Erode</option><option>Kallakurichi</option>
+                        <option>Kancheepuram</option><option>Kanyakumari</option><option>Karur</option>
+                        <option>Krishnagiri</option><option>Madurai</option><option>Mayiladuthurai</option>
+                        <option>Nagapattinam</option><option>Namakkal</option><option>Nilgiris</option>
+                        <option>Perambalur</option><option>Pudukkottai</option><option>Ramanathapuram</option>
+                        <option>Ranipet</option><option>Salem</option><option>Sivaganga</option>
+                        <option>Tenkasi</option><option>Thanjavur</option><option>Theni</option>
+                        <option>Thoothukudi</option><option>Tiruchirappalli</option><option>Tirunelveli</option>
+                        <option>Tirupathur</option><option>Tiruppur</option><option>Tiruvallur</option>
+                        <option>Tiruvannamalai</option><option>Tiruvarur</option><option>Vellore</option>
+                        <option>Viluppuram</option><option>Virudhunagar</option>
+                    </select>
+                </div>
+
+                <div class="form-group" style="margin-bottom:0;">
+                    <label class="form-label" for="filter-hub">Collection Hub</label>
+                    <select id="filter-hub" class="form-control form-select">
+                        <option value="">All Hubs</option>
+                    </select>
+                </div>
+
+                <div class="form-group" style="margin-bottom:0;">
+                    <label class="form-label" for="filter-max-price">Max Price (₹/kg)</label>
+                    <input type="number" id="filter-max-price" class="form-control" placeholder="e.g. 80" min="1">
+                </div>
+
+                <div class="form-group" style="margin-bottom:0;">
+                    <label class="form-label" for="filter-grade">Quality Grade</label>
+                    <select id="filter-grade" class="form-control form-select">
+                        <option value="">All Grades</option>
+                        <option value="Grade A">Grade A (Export/Premium)</option>
+                        <option value="Grade B">Grade B (Standard)</option>
+                        <option value="Grade C">Grade C (Processing)</option>
+                    </select>
+                </div>
+
+                <div class="form-group" style="margin-bottom:0;">
+                    <label class="form-label" for="filter-organic">Farming Method</label>
+                    <select id="filter-organic" class="form-control form-select">
+                        <option value="">Any Method</option>
+                        <option value="organic">🌿 Organic / Natural</option>
+                        <option value="conventional">Conventional</option>
+                    </select>
+                </div>
+
+                <div class="form-group" style="margin-bottom:0;">
+                    <label class="form-label" for="filter-sort-by">Sort By</label>
+                    <select id="filter-sort-by" class="form-control form-select">
+                        <option value="date_asc">Harvest Date (Earliest)</option>
+                        <option value="price_asc">Price (Lowest first)</option>
+                        <option value="price_desc">Price (Highest first)</option>
+                        <option value="qty_desc">Quantity (Highest first)</option>
+                        <option value="distance">Proximity (Nearest)</option>
+                    </select>
+                </div>
+
+                <div class="form-group" style="margin-bottom:0;align-self:flex-end;">
+                    <button class="btn btn-outline btn-sm" onclick="resetFilters()" style="width:100%;">↺ Clear Filters</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- RESULTS STATS -->
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
+            <div style="font-weight:700;color:var(--slate-700);" id="results-count">Loading produce...</div>
+        </div>
+
+        <!-- PRODUCE CARDS GRID -->
+        <div class="produce-grid" id="marketplace-grid">
+            <!-- Populated dynamically via marketplace.js -->
+        </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="container footer-content">
+            <div style="display:flex;align-items:center;gap:0.75rem;">
+                <div class="logo-icon" style="width:28px;height:28px;font-size:0.9rem;">🌱</div>
+                <span style="font-weight:700;color:var(--slate-800);">AgriSmart Connect</span>
+                <span>© 2026</span>
+            </div>
+            <ul class="footer-links">
+                <li><a href="/index.html">Home</a></li>
+                <li><a href="/marketplace.html">Marketplace</a></li>
+                <li><a href="/login.html">Sign In</a></li>
+            </ul>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="/js/i18n.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/voice-guidance.js"></script>
+    <script src="/js/marketplace.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.AgriVoice) window.AgriVoice.attachPageHeaderVoice('marketplace');
+        });
+    </script>
+</body>
+</html>
